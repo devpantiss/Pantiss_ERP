@@ -1,0 +1,14 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pantiss-mark-title">
+  <title id="pantiss-mark-title">Pantiss</title>
+  <g aria-hidden="true">
+    <path d="M2 2H94V94H2V2Z" fill="#F5F8F0"/>
+    <path d="M6 2H14V94H6V2ZM17 2H25V94H17V2ZM29 2H36V94H29V2ZM69 2H76V94H69V2ZM80 2H88V94H80V2Z" fill="#72B82B"/>
+    <path d="M9 2H11V94H9V2ZM20 2H22V94H20V2ZM32 2H34V94H32V2ZM72 2H74V94H72V2ZM83 2H85V94H83V2Z" fill="#9BD448"/>
+    <path d="M2 17H94M2 35H94M2 54H94M2 72H94M2 89H94" stroke="#A6D759" stroke-width="2"/>
+    <path d="M24 40C35 21 53 8 83 4C73 20 58 35 24 40Z" fill="#39A90C"/>
+    <path d="M28 37C45 29 59 18 77 7" stroke="#62C52A" stroke-width="2" stroke-linecap="round"/>
+    <path d="M45 27C37 19 25 16 15 17C22 28 31 32 45 27Z" fill="#59B91B"/>
+    <path d="M49 25C59 14 73 11 88 13C80 25 67 29 49 25Z" fill="#45AD10"/>
+    <path d="M22 53C26 43 36 37 46 40C52 33 66 33 72 40C84 37 93 46 91 57C93 69 83 77 72 75C65 82 51 82 44 76C31 79 21 69 22 53Z" fill="#F20D0D"/>
+  </g>
+</svg>

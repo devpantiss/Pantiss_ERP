@@ -1,0 +1,17 @@
+<svg width="250" height="99" viewBox="0 0 250 99" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pantiss-logo-title">
+  <title id="pantiss-logo-title">Pantiss — Group of Non-Profits</title>
+  <g aria-hidden="true">
+    <path d="M4 4H99V95H4V4Z" fill="#F5F8F0"/>
+    <path d="M8 4H16V95H8V4ZM19 4H27V95H19V4ZM31 4H38V95H31V4ZM72 4H79V95H72V4ZM83 4H91V95H83V4Z" fill="#72B82B"/>
+    <path d="M11 4H13V95H11V4ZM22 4H24V95H22V4ZM34 4H36V95H34V4ZM75 4H77V95H75V4ZM86 4H88V95H86V4Z" fill="#9BD448"/>
+    <path d="M4 19H99M4 37H99M4 56H99M4 74H99M4 91H99" stroke="#A6D759" stroke-width="2"/>
+    <path d="M27 42C38 23 56 10 86 6C76 22 61 37 27 42Z" fill="#39A90C"/>
+    <path d="M31 39C48 31 62 20 80 9" stroke="#62C52A" stroke-width="2" stroke-linecap="round"/>
+    <path d="M48 29C40 21 28 18 18 19C25 30 34 34 48 29Z" fill="#59B91B"/>
+    <path d="M52 27C62 16 76 13 91 15C83 27 70 31 52 27Z" fill="#45AD10"/>
+    <path d="M25 55C29 45 39 39 49 42C55 35 69 35 75 42C87 39 96 48 94 59C96 71 86 79 75 77C68 84 54 84 47 78C34 81 24 71 25 55Z" fill="#F20D0D"/>
+    <path d="M110 20V82" stroke="#777777" stroke-width="1.4"/>
+    <text x="117" y="55" fill="#F20707" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" letter-spacing="-1.2">PANTISS</text>
+    <text x="117" y="76" fill="#169111" font-family="Arial, Helvetica, sans-serif" font-size="13.6" font-weight="700" letter-spacing="-0.5">Group of Non-Profits</text>
+  </g>
+</svg>
