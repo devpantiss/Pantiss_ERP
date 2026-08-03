@@ -50,7 +50,7 @@ export function TopNavigation() {
             className="focus-ring group ml-1 flex items-center rounded-xl p-1 transition-colors hover:bg-[var(--surface-soft)]"
             aria-label="Open user profile"
           >
-            <span className="grid size-8 place-items-center rounded-[10px] bg-gradient-to-br from-violet-500 to-blue-500 text-[10px] font-semibold text-white shadow-lg shadow-blue-500/10">
+            <span className="grid size-8 place-items-center rounded-[10px] bg-gradient-to-br from-blue-600 to-cyan-400 text-[10px] font-semibold text-white shadow-lg shadow-blue-500/10">
               AK
             </span>
           </button>

@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "id": "finance.manager@pantiss.org",
+      "password": "Finance@123",
+      "name": "Aarav Kapoor",
+      "initials": "AK",
+      "role": "finance-manager",
+      "roleLabel": "Finance Manager",
+      "moduleId": "finance",
+      "allowedSections": []
+    },
+    {
+      "id": "hr.manager@pantiss.org",
+      "password": "HR@123",
+      "name": "Ritika Sen",
+      "initials": "RS",
+      "role": "hr-manager",
+      "roleLabel": "Human Resources Manager",
+      "moduleId": "human-resources",
+      "allowedSections": []
+    },
+    {
+      "id": "me.manager@pantiss.org",
+      "password": "ME@123",
+      "name": "Meera Rao",
+      "initials": "MR",
+      "role": "me-manager",
+      "roleLabel": "M&E Manager",
+      "moduleId": "monitoring-evaluation",
+      "allowedSections": [
+        "dashboard",
+        "projects",
+        "reports",
+        "employee-status"
+      ]
+    },
+    {
+      "id": "communications.manager@pantiss.org",
+      "password": "Comms@123",
+      "name": "Ananya Das",
+      "initials": "AD",
+      "role": "communications-manager",
+      "roleLabel": "Communications Manager",
+      "moduleId": "communications",
+      "allowedSections": []
+    },
+    {
+      "id": "bd.manager@pantiss.org",
+      "password": "BD@123",
+      "name": "Rohan Kumar",
+      "initials": "RK",
+      "role": "business-development-manager",
+      "roleLabel": "Business Development Manager",
+      "moduleId": "business-development",
+      "allowedSections": []
+    },
+    {
+      "id": "strategy.manager@pantiss.org",
+      "password": "Strategy@123",
+      "name": "Ishita Jain",
+      "initials": "IJ",
+      "role": "strategy-manager",
+      "roleLabel": "Strategy & Innovation Manager",
+      "moduleId": "strategy-innovation",
+      "allowedSections": []
+    }
+  ]
+}

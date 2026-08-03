@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useLayoutEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { AmbientBackground } from "../components/animations/AmbientBackground";
@@ -7,12 +7,13 @@ import { TopNavigation } from "../components/layout/TopNavigation";
 
 const LandingPage = lazy(() => import("../pages/LandingPage"));
 const ModulesPage = lazy(() => import("../pages/ModulesPage"));
+const MonitoringEvaluationPage = lazy(() => import("../pages/MonitoringEvaluationPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function RouteFallback() {
   return (
     <div className="grid min-h-screen place-items-center">
-      <div className="size-5 animate-spin rounded-full border-2 border-blue-500/20 border-t-blue-500" aria-label="Loading page" />
+      <div className="size-5 animate-spin rounded-full border-2 border-red-500/20 border-t-red-500" aria-label="Loading page" />
     </div>
   );
 }
@@ -21,6 +22,11 @@ export function App() {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
   const [loading, setLoading] = useState(true);
+  const isEnterpriseWorkspace = location.pathname.startsWith("/monitoring-evaluation");
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
 
   const completeLoading = useCallback(() => {
     setLoading(false);
@@ -32,7 +38,7 @@ export function App() {
       <AnimatePresence>{loading && <PageLoader onComplete={completeLoading} />}</AnimatePresence>
       {!loading && (
         <>
-          <TopNavigation />
+          {!isEnterpriseWorkspace && <TopNavigation />}
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}
@@ -45,6 +51,9 @@ export function App() {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/modules/:categoryId" element={<ModulesPage />} />
+                  <Route path="/monitoring-evaluation/:section?" element={<MonitoringEvaluationPage />} />
+                  <Route path="/monitoring-evaluation/projects/:projectId" element={<MonitoringEvaluationPage />} />
+                  <Route path="/monitoring-evaluation/projects/:projectId/centers/:centerId" element={<MonitoringEvaluationPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>

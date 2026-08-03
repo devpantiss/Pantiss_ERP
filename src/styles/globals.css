@@ -7,6 +7,11 @@
 
 :root {
   color-scheme: light;
+  --brand-primary: #2563eb;
+  --brand-hover: #1d4ed8;
+  --brand-accent: #0891b2;
+  --brand-soft: #dbeafe;
+  --brand-ring: rgba(37, 99, 235, 0.16);
   --background: #f6f8fc;
   --text: #10131a;
   --text-muted: #626b7b;
@@ -28,6 +33,11 @@
 
 .dark {
   color-scheme: dark;
+  --brand-primary: #3b82f6;
+  --brand-hover: #60a5fa;
+  --brand-accent: #38bdf8;
+  --brand-soft: rgba(59, 130, 246, 0.12);
+  --brand-ring: rgba(59, 130, 246, 0.22);
   --background: #09090b;
   --text: #f8fafc;
   --text-muted: #94a3b8;
@@ -85,7 +95,7 @@ button {
 }
 
 .focus-ring:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid var(--brand-accent);
   outline-offset: 3px;
 }
 
@@ -485,6 +495,591 @@ button {
   inset: 0;
   pointer-events: none;
   background: linear-gradient(105deg, transparent 0 72%, rgba(255,255,255,.025) 72% 72.3%, transparent 72.3%);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/*  Zoho-style Login Dialog                                   */
+/* ═══════════════════════════════════════════════════════════ */
+
+.zoho-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+  background: #000;
+}
+
+/* ── Video background ── */
+.zoho-login-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.zoho-login-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.zoho-login-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Main card ── */
+.zoho-login-card {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.02),
+    0 12px 40px rgba(0, 0, 0, 0.06),
+    0 30px 80px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .zoho-login-card {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Close button ── */
+.zoho-login-close {
+  position: absolute;
+  z-index: 10;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.zoho-login-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* ═══ LEFT PANEL — Form ═══ */
+.zoho-login-form-panel {
+  padding: 40px 40px 36px;
+}
+
+@media (max-width: 639px) {
+  .zoho-login-form-panel {
+    padding: 32px 24px 28px;
+  }
+}
+
+/* Brand */
+.zoho-login-brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.zoho-login-brand-logo {
+  display: block;
+  width: auto;
+  height: 44px;
+  object-fit: contain;
+}
+
+/* Heading */
+.zoho-login-heading {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.zoho-login-subheading {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.zoho-login-subheading strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Form */
+.zoho-login-form {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.zoho-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.zoho-field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+}
+
+.zoho-field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  outline: none;
+  transition: all 200ms ease;
+}
+
+.zoho-field-input::placeholder {
+  color: #9ca3af;
+}
+
+.zoho-field-input:hover {
+  border-color: #fca5a5;
+}
+
+.zoho-field-input:focus {
+  border-color: var(--brand-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+/* Password */
+.zoho-password-wrapper {
+  position: relative;
+}
+
+.zoho-password-wrapper .zoho-field-input {
+  padding-right: 44px;
+}
+
+.zoho-password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.zoho-password-toggle:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Remember / Forgot */
+.zoho-remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -4px;
+}
+
+.zoho-remember-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.zoho-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.zoho-forgot-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--brand-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 150ms ease;
+}
+
+.zoho-forgot-link:hover {
+  color: var(--brand-hover);
+}
+
+/* Submit button */
+.zoho-login-submit {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  background: var(--brand-primary);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 200ms ease, box-shadow 200ms ease;
+}
+
+.zoho-login-submit:hover {
+  background: var(--brand-hover);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.zoho-login-submit:active {
+  background: #991b1b;
+}
+
+/* Footer */
+.zoho-login-footer {
+  margin-top: 24px;
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.zoho-signup-link {
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  transition: color 150ms ease;
+}
+
+.zoho-signup-link:hover {
+  color: var(--brand-hover);
+}
+
+/* ═══ RIGHT PANEL — Promo ═══ */
+.zoho-login-promo-panel {
+  display: none;
+  background: #fff8f8;
+  border-left: 1px solid #fee2e2;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .zoho-login-promo-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.zoho-promo-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 32px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Promo illustration */
+.zoho-promo-illustration {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 28px;
+}
+
+.zoho-promo-icon-ring {
+  position: absolute;
+  inset: 20px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.zoho-promo-orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(148, 163, 184, 0.3);
+  animation: zoho-orbit-spin 20s linear infinite;
+}
+
+.zoho-promo-orbit--1 {
+  inset: 0;
+}
+
+.zoho-promo-orbit--2 {
+  inset: -16px;
+  animation-duration: 30s;
+  animation-direction: reverse;
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+.zoho-promo-orbit--1::after,
+.zoho-promo-orbit--2::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fca5a5;
+  transform: translateX(-50%);
+}
+
+.zoho-promo-orbit--2::after {
+  background: #fb7185;
+  width: 5px;
+  height: 5px;
+}
+
+.zoho-promo-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.zoho-promo-description {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 24px;
+  max-width: 280px;
+}
+
+.zoho-promo-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: none;
+  background: var(--brand-soft);
+  color: var(--brand-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.zoho-promo-cta:hover {
+  background: #fecaca;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12);
+}
+
+/* Slide dots */
+.zoho-promo-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 28px;
+}
+
+.zoho-promo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: all 250ms ease;
+}
+
+.zoho-promo-dot--active {
+  width: 20px;
+  background: var(--brand-primary);
+}
+
+/* ── Dark-mode overrides for the Zoho login ── */
+
+.dark .zoho-login-card {
+  background: #000000;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 30px 80px rgba(0, 0, 0, 0.25);
+}
+
+.dark .zoho-login-close {
+  color: #64748b;
+}
+
+.dark .zoho-login-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+.dark .zoho-login-heading {
+  color: #f8fafc;
+}
+
+.dark .zoho-login-subheading {
+  color: #94a3b8;
+}
+
+.dark .zoho-login-subheading strong {
+  color: #e2e8f0;
+}
+
+.dark .zoho-field-label {
+  color: #94a3b8;
+}
+
+.dark .zoho-field-input {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.dark .zoho-field-input::placeholder {
+  color: #64748b;
+}
+
+.dark .zoho-field-input:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark .zoho-field-input:focus {
+  border-color: var(--brand-primary);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+.dark .zoho-password-toggle {
+  color: #64748b;
+}
+
+.dark .zoho-password-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+}
+
+.dark .zoho-remember-label {
+  color: #94a3b8;
+}
+
+.dark .zoho-forgot-link {
+  color: #f87171;
+}
+
+.dark .zoho-forgot-link:hover {
+  color: #fca5a5;
+}
+
+.dark .zoho-login-submit {
+  background: var(--brand-primary);
+}
+
+.dark .zoho-login-submit:hover {
+  background: var(--brand-hover);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+}
+
+.dark .zoho-login-footer {
+  color: #94a3b8;
+}
+
+.dark .zoho-signup-link {
+  color: #f87171;
+}
+
+.dark .zoho-signup-link:hover {
+  color: #fca5a5;
+}
+
+.dark .zoho-login-promo-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border-left-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .zoho-promo-title {
+  color: #f1f5f9;
+}
+
+.dark .zoho-promo-description {
+  color: #94a3b8;
+}
+
+.dark .zoho-promo-cta {
+  background: var(--brand-soft);
+  color: #f87171;
+}
+
+.dark .zoho-promo-cta:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.dark .zoho-promo-orbit {
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+.dark .zoho-promo-orbit--2 {
+  border-color: rgba(148, 163, 184, 0.06);
+}
+
+.dark .zoho-promo-dot {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .zoho-promo-dot--active {
+  background: var(--brand-primary);
+}
+
+/* ═══ Keyframes ═══ */
+
+@keyframes zoho-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes aurora {

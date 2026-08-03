@@ -33,13 +33,13 @@ export function WorkspaceRail({ active }: { active: CategorySlug }) {
                 {isActive && (
                   <motion.span
                     layoutId="rail-active"
-                    className="absolute -left-px top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-blue-400 shadow-[0_0_12px_#60a5fa]"
+                    className="absolute -left-px top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-red-500 shadow-[0_0_12px_#ef4444]"
                   />
                 )}
                 <span className={cn(
                   "grid size-8 shrink-0 place-items-center rounded-[10px] border transition-colors",
                   isActive
-                    ? "border-blue-400/15 bg-blue-400/10 text-blue-400"
+                    ? "border-red-400/20 bg-red-400/10 text-red-500"
                     : "border-[var(--border)] bg-[var(--surface-soft)]",
                 )}>
                   <Icon size={15} strokeWidth={1.7} />
@@ -62,7 +62,7 @@ export function WorkspaceRail({ active }: { active: CategorySlug }) {
             <span>68%</span>
           </div>
           <div className="h-1 overflow-hidden rounded-full bg-[var(--surface-strong)]">
-            <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" />
+            <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-red-600 to-rose-400" />
           </div>
         </div>
       </div>

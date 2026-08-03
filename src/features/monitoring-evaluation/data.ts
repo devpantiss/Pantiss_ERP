@@ -1,0 +1,182 @@
+export interface ThematicAreaMetric {
+  name: string;
+  shortName: string;
+  projects: number;
+  reach: string;
+  progress: number;
+  budget: string;
+  color: string;
+  kpis: Array<{ label: string; value: string; note: string }>;
+  indicators: Array<{ label: string; value: number }>;
+}
+
+export interface MonitoringProject {
+  id: string;
+  name: string;
+  area: string;
+  location: string;
+  manager: string;
+  status: "On track" | "At risk" | "Completed";
+  progress: number;
+  budget: string;
+  spent: string;
+  period: string;
+  beneficiaries: string;
+  outcome: string;
+}
+
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  cadence: string;
+  lastGenerated: string;
+  pages: number;
+}
+
+export interface EmployeeStatus {
+  id: string;
+  name: string;
+  role: string;
+  initials: string;
+  unit: string;
+  planned: number;
+  completed: number;
+  fieldDays: number;
+  status: "Submitted" | "In review" | "Pending";
+}
+
+export const thematicAreas: ThematicAreaMetric[] = [
+  {
+    name: "Skill Development", shortName: "Skill", projects: 8, reach: "12.4K", progress: 78, budget: "₹2.8 Cr", color: "#dc2626",
+    kpis: [
+      { label: "Learners enrolled", value: "12,420", note: "Women constitute 54%" },
+      { label: "Training completion", value: "86%", note: "10,681 learners completed" },
+      { label: "NSQF certification", value: "78%", note: "Assessment records verified" },
+      { label: "Placed or self-employed", value: "68%", note: "Within 90 days of certification" },
+    ],
+    indicators: [
+      { label: "Attendance above 80%", value: 88 },
+      { label: "Course completion rate", value: 86 },
+      { label: "Certification success rate", value: 78 },
+      { label: "90-day employment retention", value: 64 },
+    ],
+  },
+  {
+    name: "Livelihood", shortName: "Livelihood", projects: 6, reach: "8.7K", progress: 64, budget: "₹2.1 Cr", color: "#ef4444",
+    kpis: [
+      { label: "Households supported", value: "8,740", note: "Across 112 villages" },
+      { label: "Average income increase", value: "24%", note: "Compared with baseline" },
+      { label: "Producer groups active", value: "146", note: "82% meeting monthly" },
+      { label: "Market linkages created", value: "38", note: "Buyer agreements verified" },
+    ],
+    indicators: [
+      { label: "Households adopting promoted practices", value: 72 },
+      { label: "Income records showing improvement", value: 64 },
+      { label: "Producer groups financially active", value: 82 },
+      { label: "Market linkage targets achieved", value: 61 },
+    ],
+  },
+  {
+    name: "Entrepreneurship", shortName: "Enterprise", projects: 5, reach: "3.2K", progress: 71, budget: "₹1.6 Cr", color: "#f97316",
+    kpis: [
+      { label: "Entrepreneurs incubated", value: "3,180", note: "61% women-led ventures" },
+      { label: "Enterprises launched", value: "1,264", note: "Business registration verified" },
+      { label: "12-month survival rate", value: "76%", note: "Active trading confirmed" },
+      { label: "Local jobs created", value: "2,840", note: "Direct full-time equivalents" },
+    ],
+    indicators: [
+      { label: "Business plans completed", value: 84 },
+      { label: "Enterprises accessing finance", value: 58 },
+      { label: "Enterprises active after 12 months", value: 76 },
+      { label: "Women-led enterprises operational", value: 71 },
+    ],
+  },
+  {
+    name: "Nutrition", shortName: "Nutrition", projects: 7, reach: "18.1K", progress: 83, budget: "₹2.4 Cr", color: "#eab308",
+    kpis: [
+      { label: "Children screened", value: "18,140", note: "6–59 month age group" },
+      { label: "SAM/MAM cases identified", value: "2,186", note: "100% referred for follow-up" },
+      { label: "Nutrition recovery rate", value: "81%", note: "Based on verified follow-ups" },
+      { label: "Caregivers counselled", value: "14,620", note: "IYCF and dietary diversity" },
+    ],
+    indicators: [
+      { label: "Eligible children screened", value: 92 },
+      { label: "Identified cases receiving follow-up", value: 88 },
+      { label: "Children reaching recovery criteria", value: 81 },
+      { label: "Households meeting diet diversity", value: 67 },
+    ],
+  },
+  {
+    name: "Health", shortName: "Health", projects: 9, reach: "24.8K", progress: 69, budget: "₹3.2 Cr", color: "#e11d48",
+    kpis: [
+      { label: "People screened", value: "24,820", note: "NCD and primary health screening" },
+      { label: "Clinical consultations", value: "18,460", note: "Mobile and community clinics" },
+      { label: "Referral completion", value: "74%", note: "Facility visits confirmed" },
+      { label: "Health camps conducted", value: "286", note: "94% against annual plan" },
+    ],
+    indicators: [
+      { label: "Planned outreach sessions delivered", value: 94 },
+      { label: "High-risk cases followed up", value: 79 },
+      { label: "Referred patients reaching facilities", value: 74 },
+      { label: "Patient records complete", value: 86 },
+    ],
+  },
+  {
+    name: "Sanitation", shortName: "Sanitation", projects: 4, reach: "9.6K", progress: 58, budget: "₹1.3 Cr", color: "#fb7185",
+    kpis: [
+      { label: "Households with WASH access", value: "9,580", note: "Access physically verified" },
+      { label: "Water points functional", value: "91%", note: "Tested during field visits" },
+      { label: "ODF villages sustained", value: "68", note: "Verified through spot checks" },
+      { label: "WASH sessions delivered", value: "412", note: "Schools and communities" },
+    ],
+    indicators: [
+      { label: "Constructed facilities functional", value: 91 },
+      { label: "Households practicing safe water storage", value: 73 },
+      { label: "ODF verification sustained", value: 68 },
+      { label: "Schools with active WASH committees", value: 76 },
+    ],
+  },
+  {
+    name: "Climate Change", shortName: "Climate", projects: 5, reach: "6.4K", progress: 75, budget: "₹1.9 Cr", color: "#16a34a",
+    kpis: [
+      { label: "Climate-resilient households", value: "6,420", note: "Practices verified on site" },
+      { label: "Land restored", value: "2,860 ha", note: "GIS and field-verified area" },
+      { label: "Sapling survival rate", value: "82%", note: "After two seasonal checks" },
+      { label: "Water structures revived", value: "126", note: "Community assets functional" },
+    ],
+    indicators: [
+      { label: "Households adopting resilient practices", value: 75 },
+      { label: "Restoration target achieved", value: 72 },
+      { label: "Plantation survival after 12 months", value: 82 },
+      { label: "Community adaptation plans active", value: 69 },
+    ],
+  },
+];
+
+export const projects: MonitoringProject[] = [
+  { id: "PNT-2401", name: "PMKVY 4.0 Odisha Skills", area: "Skill Development", location: "Odisha · 4 districts", manager: "Rakesh Swain", status: "On track", progress: 78, budget: "₹84.0 L", spent: "₹61.2 L", period: "01 Apr 2025 – 31 Dec 2026", beneficiaries: "1,248", outcome: "892 candidates certified across 18 vocational batches, with 612 verified placements." },
+  { id: "PNT-2404", name: "Samriddhi Livelihoods Programme", area: "Livelihood", location: "Odisha · 5 districts", manager: "Neha Sahu", status: "On track", progress: 64, budget: "₹96.0 L", spent: "₹58.4 L", period: "May 2025 – Apr 2027", beneficiaries: "5,240", outcome: "3,860 households adopted improved farm and non-farm livelihood practices." },
+  { id: "PNT-2407", name: "Saksham Women Enterprise", area: "Entrepreneurship", location: "Jharkhand · 3 districts", manager: "Rohan Kumar", status: "On track", progress: 71, budget: "₹62.5 L", spent: "₹41.8 L", period: "Jul 2025 – Jun 2027", beneficiaries: "1,280", outcome: "426 micro-enterprises have reached market-readiness." },
+  { id: "PNT-2318", name: "Poshan Community Network", area: "Nutrition", location: "West Bengal · 6 districts", manager: "Meera Roy", status: "At risk", progress: 54, budget: "₹1.12 Cr", spent: "₹72.4 L", period: "Jan 2024 – Dec 2026", beneficiaries: "12,640", outcome: "8,900 households screened; follow-up coverage needs attention." },
+  { id: "PNT-2322", name: "Swasthya Mobile Clinics", area: "Health", location: "Assam · 5 districts", manager: "Amit Singh", status: "On track", progress: 69, budget: "₹1.48 Cr", spent: "₹96.7 L", period: "Oct 2024 – Sep 2027", beneficiaries: "18,320", outcome: "26 mobile health camps operating on a monthly cycle." },
+  { id: "PNT-2209", name: "Jal Suraksha Mission", area: "Sanitation", location: "Bihar · 4 districts", manager: "Kavita Jain", status: "Completed", progress: 100, budget: "₹78.0 L", spent: "₹76.1 L", period: "Apr 2023 – Mar 2026", beneficiaries: "9,580", outcome: "132 water points commissioned and handed to village committees." },
+  { id: "PNT-2412", name: "Green Village Resilience", area: "Climate Change", location: "Chhattisgarh · 2 districts", manager: "Imran Ali", status: "On track", progress: 75, budget: "₹91.0 L", spent: "₹63.5 L", period: "Jun 2025 – May 2027", beneficiaries: "6,420", outcome: "1,860 households adopted climate-resilient farm practices." },
+];
+
+export const reportTemplates: ReportTemplate[] = [
+  { id: "mpr", name: "MPR", description: "Monthly progress, output delivery, variance and financial utilization.", cadence: "Monthly", lastGenerated: "28 Jul 2026", pages: 18 },
+  { id: "qpr", name: "QPR", description: "Quarterly outcomes, indicator trends, risks and management response.", cadence: "Quarterly", lastGenerated: "05 Jul 2026", pages: 34 },
+  { id: "commencement", name: "Commencement Report", description: "Project inception context, baseline, approach and implementation plan.", cadence: "At project start", lastGenerated: "12 Jun 2026", pages: 42 },
+  { id: "coffee-table", name: "Coffee Table Book", description: "Editorial impact stories, milestones and beneficiary narratives.", cadence: "Annual", lastGenerated: "18 Mar 2026", pages: 56 },
+  { id: "photobook", name: "Photobook", description: "Curated field documentation with captions, locations and consent records.", cadence: "As required", lastGenerated: "02 May 2026", pages: 48 },
+];
+
+export const employeeStatuses: EmployeeStatus[] = [
+  { id: "EMP-018", name: "Ananya Das", role: "Program Manager", initials: "AD", unit: "Skill Development", planned: 18, completed: 17, fieldDays: 8, status: "Submitted" },
+  { id: "EMP-032", name: "Rohan Kumar", role: "Project Lead", initials: "RK", unit: "Entrepreneurship", planned: 16, completed: 14, fieldDays: 11, status: "In review" },
+  { id: "EMP-041", name: "Meera Roy", role: "M&E Specialist", initials: "MR", unit: "Nutrition", planned: 20, completed: 18, fieldDays: 6, status: "Submitted" },
+  { id: "EMP-057", name: "Amit Singh", role: "Field Coordinator", initials: "AS", unit: "Health", planned: 22, completed: 19, fieldDays: 15, status: "Submitted" },
+  { id: "EMP-064", name: "Kavita Jain", role: "Program Officer", initials: "KJ", unit: "Sanitation", planned: 14, completed: 9, fieldDays: 10, status: "Pending" },
+  { id: "EMP-071", name: "Imran Ali", role: "Climate Lead", initials: "IA", unit: "Climate Change", planned: 17, completed: 15, fieldDays: 12, status: "In review" },
+];

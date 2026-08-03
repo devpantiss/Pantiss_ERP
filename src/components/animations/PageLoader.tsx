@@ -53,7 +53,7 @@ function BarChart({ delay }: { delay: number }) {
           animate={{ scaleY: 1 }}
           transition={{ delay: delay + i * 0.05, duration: 0.45, ease }}
           style={{ height: `${h * 52}px`, originY: 1 }}
-          className="w-[7px] rounded-t-sm bg-gradient-to-t from-blue-500/60 to-cyan-400/80"
+          className="w-[7px] rounded-t-sm bg-gradient-to-t from-red-600/60 to-rose-400/80"
         />
       ))}
     </motion.div>
@@ -101,7 +101,7 @@ function OrbitRings() {
         animate={{ opacity: [0.06, 0.16, 0.06], scale: [1, 1.04, 1] }}
         transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
         style={{ width: 430, height: 430 }}
-        className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-400/20"
+        className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-red-400/20"
       />
     </div>
   );
@@ -116,7 +116,7 @@ function FuturisticCore() {
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 rounded-full border border-dashed border-cyan-300/15"
+        className="absolute inset-0 rounded-full border border-dashed border-rose-300/15"
       />
       <motion.div
         animate={{ rotate: -360 }}
@@ -129,26 +129,26 @@ function FuturisticCore() {
         className="absolute inset-[18%] rounded-full"
         style={{
           background:
-            "conic-gradient(from 20deg, transparent 0 19%, rgba(34,211,238,.42) 20%, transparent 21% 49%, rgba(74,222,128,.35) 50%, transparent 51% 79%, rgba(96,165,250,.3) 80%, transparent 81%)",
+            "conic-gradient(from 20deg, transparent 0 19%, rgba(244,63,94,.42) 20%, transparent 21% 49%, rgba(74,222,128,.35) 50%, transparent 51% 79%, rgba(239,68,68,.3) 80%, transparent 81%)",
           maskImage: "radial-gradient(transparent 68%, black 69% 72%, transparent 73%)",
         }}
       />
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-[28%] rounded-full border border-blue-300/15"
+        className="absolute inset-[28%] rounded-full border border-red-300/15"
       >
-        <span className="absolute left-1/2 top-0 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300 shadow-[0_0_16px_3px_rgba(103,232,249,.65)]" />
+        <span className="absolute left-1/2 top-0 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rose-300 shadow-[0_0_16px_3px_rgba(253,164,175,.65)]" />
         <span className="absolute bottom-[7%] right-[14%] size-1 rounded-full bg-emerald-300 shadow-[0_0_12px_2px_rgba(110,231,183,.55)]" />
       </motion.div>
       <motion.div
         animate={{ opacity: [0.12, 0.28, 0.12], scale: [0.96, 1.03, 0.96] }}
         transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-[36%] rounded-full bg-cyan-400/10 blur-2xl"
+        className="absolute inset-[36%] rounded-full bg-rose-400/10 blur-2xl"
       />
-      <span className="absolute left-1/2 top-[5%] h-[12%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent to-cyan-200/20" />
+      <span className="absolute left-1/2 top-[5%] h-[12%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent to-rose-200/20" />
       <span className="absolute bottom-[5%] left-1/2 h-[12%] w-px -translate-x-1/2 bg-gradient-to-t from-transparent to-emerald-200/20" />
-      <span className="absolute left-[5%] top-1/2 h-px w-[12%] -translate-y-1/2 bg-gradient-to-r from-transparent to-cyan-200/20" />
+      <span className="absolute left-[5%] top-1/2 h-px w-[12%] -translate-y-1/2 bg-gradient-to-r from-transparent to-rose-200/20" />
       <span className="absolute right-[5%] top-1/2 h-px w-[12%] -translate-y-1/2 bg-gradient-to-l from-transparent to-emerald-200/20" />
     </div>
   );
@@ -189,7 +189,7 @@ function ConnectionLine({
       animate={{ scaleX: 1, opacity: 1 }}
       transition={{ delay, duration: 0.6, ease }}
       style={{ originX: 0, ...style }}
-      className="absolute hidden h-px bg-gradient-to-r from-blue-400/40 to-transparent sm:block"
+      className="absolute hidden h-px bg-gradient-to-r from-red-400/40 to-transparent sm:block"
     />
   );
 }
@@ -261,7 +261,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
           width: 700,
           height: 700,
           background:
-            "radial-gradient(circle, rgba(37,99,235,0.12) 0%, rgba(6,182,212,0.06) 40%, transparent 70%)",
+            "radial-gradient(circle, rgba(220,38,38,0.12) 0%, rgba(244,63,94,0.06) 40%, transparent 70%)",
         }}
       />
 
@@ -287,7 +287,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
         label="Beneficiaries"
         value="84,309"
         change="↑ 8.1% vs last month"
-        color="text-sky-400"
+        color="text-rose-400"
         style={{ top: "12%", right: "7%" }}
       />
 
@@ -315,7 +315,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
         label="Active Donors"
         value="3,720"
         change="↑ 5.6% this month"
-        color="text-violet-400"
+        color="text-rose-400"
         style={{ bottom: "16%", right: "7%" }}
       />
 
@@ -350,7 +350,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
             className="absolute inset-0 rounded-full blur-2xl"
             style={{
               background:
-                "radial-gradient(circle, rgba(34,197,94,0.35) 0%, rgba(6,182,212,0.15) 60%, transparent 100%)",
+                "radial-gradient(circle, rgba(239,68,68,0.35) 0%, rgba(244,63,94,0.15) 60%, transparent 100%)",
             }}
           />
           <img
@@ -392,7 +392,7 @@ export function PageLoader({ onComplete }: { onComplete: () => void }) {
             onClick={onComplete}
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            className="focus-ring group flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white px-5 text-sm font-semibold text-slate-950 shadow-[0_16px_45px_rgba(0,0,0,.3)] transition-shadow hover:shadow-[0_20px_55px_rgba(34,197,94,.16)]"
+            className="focus-ring group flex h-12 items-center gap-3 rounded-2xl border border-red-400/20 bg-red-600 px-5 text-sm font-semibold text-white shadow-[0_16px_45px_rgba(0,0,0,.3)] transition-colors hover:bg-red-700 hover:shadow-[0_20px_55px_rgba(220,38,38,.2)]"
           >
             Enter workspace
             <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" />

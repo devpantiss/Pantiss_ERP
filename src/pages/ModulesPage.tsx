@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { getCategory } from "../data/modules";
 import { ModuleCard } from "../components/cards/ModuleCard";
@@ -8,13 +8,30 @@ import { useCategory } from "../hooks/useCategory";
 import { WorkspaceRail } from "../components/navigation/WorkspaceRail";
 import { LoginDialog } from "../components/auth/LoginDialog";
 import type { ModuleItem } from "../types/modules";
+import type { AuthUser } from "../app/auth-context";
+import { useAuth } from "../hooks/useAuth";
 
 export default function ModulesPage() {
   const { categoryId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const category = getCategory(categoryId);
   const { selectCategory } = useCategory();
   const [selectedModule, setSelectedModule] = useState<ModuleItem | null>(null);
   const closeLogin = useCallback(() => setSelectedModule(null), []);
+  const openModule = useCallback((module: ModuleItem) => {
+    if (module.id === "monitoring-evaluation" && user?.moduleId === module.id) {
+      navigate(`/monitoring-evaluation/${user.allowedSections[0]}`);
+      return;
+    }
+    setSelectedModule(module);
+  }, [navigate, user]);
+  const handleAuthenticated = useCallback((authenticatedUser: AuthUser) => {
+    if (selectedModule?.id === "monitoring-evaluation") {
+      navigate(`/monitoring-evaluation/${authenticatedUser.allowedSections[0]}`);
+    }
+    setSelectedModule(null);
+  }, [navigate, selectedModule]);
 
   useEffect(() => {
     if (category) selectCategory(category.id);
@@ -108,14 +125,14 @@ export default function ModulesPage() {
               key={module.id}
               module={module}
               index={index}
-              onSelect={category.id === "core-operations" ? setSelectedModule : undefined}
+              onSelect={category.id === "core-operations" ? openModule : undefined}
             />
           ))}
         </div>
         </section>
       </div>
       <AnimatePresence>
-        {selectedModule && <LoginDialog module={selectedModule} onClose={closeLogin} />}
+        {selectedModule && <LoginDialog module={selectedModule} onClose={closeLogin} onSuccess={handleAuthenticated} />}
       </AnimatePresence>
     </main>
   );

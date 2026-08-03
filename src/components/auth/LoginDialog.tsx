@@ -1,25 +1,67 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Eye, EyeOff, LockKeyhole, X } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, WandSparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ModuleItem } from "../../types/modules";
-import { IconButton } from "../ui/IconButton";
+import { demoAccounts, type AuthUser } from "../../app/auth-context";
+import { useAuth } from "../../hooks/useAuth";
 
 interface LoginDialogProps {
   module: ModuleItem;
   onClose: () => void;
+  onSuccess?: (user: AuthUser) => void;
 }
 
 const focusableSelector =
   'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
-export function LoginDialog({ module, onClose }: LoginDialogProps) {
+/* ------------------------------------------------------------------ */
+/*  Main Component                                                     */
+/* ------------------------------------------------------------------ */
+
+export function LoginDialog({ module, onClose, onSuccess }: LoginDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { login, logout } = useAuth();
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const Icon = module.icon;
+  const moduleDemoAccount = demoAccounts.find((account) => account.moduleId === module.id);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setSubmitting(true);
+    window.setTimeout(() => {
+      const authenticatedUser = login(userId, password, remember);
+      setSubmitting(false);
+      if (!authenticatedUser) {
+        setError("The user ID or password is incorrect. Contact your administrator if you need access.");
+        return;
+      }
+      if (authenticatedUser.moduleId !== module.id) {
+        logout();
+        setError(`This account is assigned to ${authenticatedUser.roleLabel} access and cannot open ${module.title}.`);
+        return;
+      }
+      onSuccess?.(authenticatedUser);
+    }, 450);
+  };
+
+  const fillModuleCredentials = () => {
+    if (!moduleDemoAccount) return;
+    setUserId(moduleDemoAccount.id);
+    setPassword(moduleDemoAccount.password);
+    setError("");
+    setShowPassword(false);
+    emailRef.current?.focus();
+  };
 
   useEffect(() => {
     const previousActiveElement = document.activeElement as HTMLElement | null;
@@ -61,121 +103,190 @@ export function LoginDialog({ module, onClose }: LoginDialogProps) {
 
   return createPortal(
     <motion.div
-      className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-black/60 px-4 py-8 backdrop-blur-md"
+      className="zoho-login-overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.25 }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
+      {/* Video background */}
+      <div className="zoho-login-bg" aria-hidden>
+        <video
+          className="zoho-login-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          src="/bg.mp4"
+        />
+        <div className="zoho-login-video-overlay" />
+      </div>
+
       <motion.div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        initial={{ opacity: 0, y: 18, scale: 0.97 }}
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        className="relative w-full max-w-[440px] overflow-hidden rounded-[28px] border border-[var(--border-strong)] bg-[var(--module-bg)] shadow-[0_32px_100px_rgba(0,0,0,.35)]"
+        exit={{ opacity: 0, y: 16, scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="zoho-login-card"
       >
-        <div
-          className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${module.accent} opacity-[0.11] blur-3xl`}
-          aria-hidden
-        />
-        <div className="grid-pattern absolute inset-0 opacity-[0.08] [mask-image:linear-gradient(to_bottom,black,transparent_46%)]" aria-hidden />
+        {/* ─── Close button (top-right) ─── */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close login"
+          className="zoho-login-close"
+        >
+          <X size={18} />
+        </button>
 
-        <div className="relative p-6 sm:p-8">
-          <div className="mb-7 flex items-start justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${module.accent} text-white shadow-lg shadow-black/10`}>
-                <Icon size={22} strokeWidth={1.7} />
-              </span>
-              <div>
-                <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--text-subtle)]">
-                  Secure access
-                </p>
-                <h2 id={titleId} className="text-xl font-semibold tracking-[-0.035em] text-[var(--text)]">
-                  Sign in to {module.title}
-                </h2>
-              </div>
-            </div>
-            <IconButton label="Close login" onClick={onClose} className="size-9 shrink-0">
-              <X size={17} />
-            </IconButton>
+        {/* ═══════════════════════════════════════════ */}
+        {/*  LEFT PANEL — Login Form                    */}
+        {/* ═══════════════════════════════════════════ */}
+        <div className="zoho-login-form-panel">
+          {/* Brand logo */}
+          <div className="zoho-login-brand">
+            <img
+              src="/pantiss-logo.png"
+              alt="Pantiss — Group of Non-Profits"
+              className="zoho-login-brand-logo"
+              draggable={false}
+            />
           </div>
 
-          <p id={descriptionId} className="mb-6 text-sm leading-6 text-[var(--text-muted)]">
-            Use your Pantiss account to continue to this Core Operations module.
+          {/* Heading */}
+          <h2 id={titleId} className="zoho-login-heading">Sign in</h2>
+          <p id={descriptionId} className="zoho-login-subheading">
+            to access <strong>{module.title}</strong>
           </p>
 
-          <form className="space-y-4" onSubmit={(event) => event.preventDefault()}>
-            <label className="block">
-              <span className="mb-2 block text-xs font-medium text-[var(--text)]">Work email</span>
+          {moduleDemoAccount && (
+            <button
+              type="button"
+              onClick={fillModuleCredentials}
+              className="focus-ring mt-4 inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.07] px-3 py-2 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-500/[0.12] dark:text-red-400"
+            >
+              <WandSparkles size={14} />
+              Autofill {moduleDemoAccount.roleLabel} demo credentials
+            </button>
+          )}
+
+          {/* Form */}
+          <form className="zoho-login-form" onSubmit={handleSubmit}>
+            <div className="zoho-field-group">
+              <label htmlFor="zoho-email" className="zoho-field-label">
+                User ID
+              </label>
               <input
                 ref={emailRef}
-                type="email"
-                name="email"
+                id="zoho-email"
+                type="text"
+                name="userId"
                 autoComplete="username"
                 required
-                placeholder="name@pantiss.org"
-                className="focus-ring h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-ghost)] hover:border-[var(--text-subtle)]"
+                value={userId}
+                onChange={(event) => setUserId(event.target.value)}
+                placeholder="Enter your Pantiss user ID"
+                className="zoho-field-input"
+                aria-invalid={Boolean(error)}
               />
-            </label>
+            </div>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-medium text-[var(--text)]">Password</span>
-              <span className="relative block">
+            <div className="zoho-field-group">
+              <label htmlFor="zoho-password" className="zoho-field-label">
+                Password
+              </label>
+              <div className="zoho-password-wrapper">
                 <input
+                  id="zoho-password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   autoComplete="current-password"
                   required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter your password"
-                  className="focus-ring h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 pr-12 text-sm text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-ghost)] hover:border-[var(--text-subtle)]"
+                  className="zoho-field-input"
+                  aria-invalid={Boolean(error)}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
+                  onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="focus-ring absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
+                  className="zoho-password-toggle"
                 >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
-              </span>
-            </label>
+              </div>
+            </div>
 
-            <div className="flex items-center justify-between gap-4 text-xs">
-              <label className="flex items-center gap-2 text-[var(--text-muted)]">
-                <input
-                  type="checkbox"
-                  name="remember"
-                  className="size-4 rounded border-[var(--border-strong)] accent-blue-500"
-                />
-                Keep me signed in
+            <div className="zoho-remember-row">
+              <label className="zoho-remember-label">
+                <input type="checkbox" name="remember" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="zoho-checkbox" />
+                Remember me
               </label>
-              <button type="button" className="focus-ring rounded-md font-medium text-blue-400 hover:text-blue-300">
+              <button type="button" className="zoho-forgot-link">
                 Forgot password?
               </button>
             </div>
 
+            {error && (
+              <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.07] px-3 py-2.5 text-[11px] leading-4 text-red-600 dark:text-red-400">
+                <AlertCircle size={15} className="mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <motion.button
               type="submit"
+              disabled={submitting}
               whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.99 }}
-              className={`focus-ring mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r ${module.accent} px-5 text-sm font-semibold text-white shadow-lg shadow-black/10`}
+              whileTap={{ scale: 0.98 }}
+              className="zoho-login-submit"
             >
-              <LockKeyhole size={16} strokeWidth={1.8} />
-              Sign in securely
+              {submitting ? "Signing in…" : "Sign in"}
             </motion.button>
           </form>
 
-          <p className="mt-5 text-center text-[10px] leading-4 text-[var(--text-subtle)]">
-            Access is restricted to authorized Pantiss team members.
-          </p>
+          {/* Footer */}
+          <p className="zoho-login-footer">Access is limited to authorized Pantiss roles.</p>
+        </div>
+
+        {/* ═══════════════════════════════════════════ */}
+        {/*  RIGHT PANEL — Promo / Branding             */}
+        {/* ═══════════════════════════════════════════ */}
+        <div className="zoho-login-promo-panel">
+          <div className="zoho-promo-content">
+            {/* Module icon hero */}
+            <div className="zoho-promo-illustration">
+              <div className={`zoho-promo-icon-ring bg-gradient-to-br ${module.accent}`}>
+                <Icon size={40} strokeWidth={1.3} color="white" />
+              </div>
+              <div className="zoho-promo-orbit zoho-promo-orbit--1" />
+              <div className="zoho-promo-orbit zoho-promo-orbit--2" />
+            </div>
+
+            <h3 className="zoho-promo-title">{module.title}</h3>
+            <p className="zoho-promo-description">{module.description}</p>
+
+            <button type="button" className="zoho-promo-cta">
+              Learn more
+            </button>
+
+            {/* Slide dots */}
+            <div className="zoho-promo-dots" aria-hidden>
+              <span className="zoho-promo-dot zoho-promo-dot--active" />
+              <span className="zoho-promo-dot" />
+              <span className="zoho-promo-dot" />
+            </div>
+          </div>
         </div>
       </motion.div>
     </motion.div>,
