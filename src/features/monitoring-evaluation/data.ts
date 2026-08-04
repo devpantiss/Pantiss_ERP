@@ -50,16 +50,16 @@ export const thematicAreas: ThematicAreaMetric[] = [
   {
     name: "Skill Development", shortName: "Skill", projects: 8, reach: "12.4K", progress: 78, budget: "₹2.8 Cr", color: "#dc2626",
     kpis: [
-      { label: "Learners enrolled", value: "12,420", note: "Women constitute 54%" },
-      { label: "Training completion", value: "86%", note: "10,681 learners completed" },
-      { label: "NSQF certification", value: "78%", note: "Assessment records verified" },
-      { label: "Placed or self-employed", value: "68%", note: "Within 90 days of certification" },
+      { label: "Learners enrolled", value: "12,420", note: "54% women · deduplicated MIS" },
+      { label: "Training completion rate", value: "86%", note: "10,681 learners completed" },
+      { label: "Certification success rate", value: "78%", note: "Of candidates assessed" },
+      { label: "Placement rate", value: "68%", note: "Wage or self-employment verified in 90 days" },
     ],
     indicators: [
-      { label: "Attendance above 80%", value: 88 },
+      { label: "Learners with ≥80% attendance", value: 88 },
       { label: "Course completion rate", value: 86 },
       { label: "Certification success rate", value: 78 },
-      { label: "90-day employment retention", value: 64 },
+      { label: "90-day employment retention rate", value: 64 },
     ],
   },
   {
@@ -180,3 +180,354 @@ export const employeeStatuses: EmployeeStatus[] = [
   { id: "EMP-064", name: "Kavita Jain", role: "Program Officer", initials: "KJ", unit: "Sanitation", planned: 14, completed: 9, fieldDays: 10, status: "Pending" },
   { id: "EMP-071", name: "Imran Ali", role: "Climate Lead", initials: "IA", unit: "Climate Change", planned: 17, completed: 15, fieldDays: 12, status: "In review" },
 ];
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Employee Study Report — types & data
+   ───────────────────────────────────────────────────────────────────────────── */
+
+export type StudyRating = "Excellent" | "Good" | "Needs Improvement" | "Critical";
+
+export interface EmployeeStudyRecord {
+  id: string;
+  name: string;
+  initials: string;
+  role: string;
+  thematicArea: string;
+  kpisCompleted: number;
+  kpisTarget: number;
+  activitiesCompleted: number;
+  activitiesPlanned: number;
+  fieldDays: number;
+  trainingHours: number;
+  evidenceScore: number;
+  overallRating: StudyRating;
+}
+
+export interface EmployeeStudyPeriodData {
+  period: string;
+  employees: EmployeeStudyRecord[];
+}
+
+export const studyReportPeriods = [
+  "July 2026",
+  "June 2026",
+  "May 2026",
+  "April 2026",
+  "March 2026",
+  "February 2026",
+  "January 2026",
+  "December 2025",
+];
+
+export const employeeStudyData: Record<string, EmployeeStudyPeriodData[]> = {
+  "Skill Development": [
+    { period: "July 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 14, kpisTarget: 16, activitiesCompleted: 17, activitiesPlanned: 18, fieldDays: 8, trainingHours: 12, evidenceScore: 92, overallRating: "Excellent" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 11, kpisTarget: 14, activitiesCompleted: 13, activitiesPlanned: 15, fieldDays: 10, trainingHours: 18, evidenceScore: 85, overallRating: "Good" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 9, kpisTarget: 12, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 6, trainingHours: 8, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 12, kpisTarget: 15, activitiesCompleted: 14, activitiesPlanned: 16, fieldDays: 7, trainingHours: 14, evidenceScore: 88, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 13, kpisTarget: 16, activitiesCompleted: 16, activitiesPlanned: 18, fieldDays: 7, trainingHours: 10, evidenceScore: 89, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 12, activitiesPlanned: 15, fieldDays: 9, trainingHours: 16, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 7, kpisTarget: 12, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 5, trainingHours: 6, evidenceScore: 65, overallRating: "Needs Improvement" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 11, kpisTarget: 15, activitiesCompleted: 13, activitiesPlanned: 16, fieldDays: 6, trainingHours: 12, evidenceScore: 84, overallRating: "Good" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 12, kpisTarget: 16, activitiesCompleted: 15, activitiesPlanned: 18, fieldDays: 9, trainingHours: 11, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 15, fieldDays: 8, trainingHours: 14, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 6, kpisTarget: 12, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 4, trainingHours: 4, evidenceScore: 58, overallRating: "Needs Improvement" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 10, kpisTarget: 15, activitiesCompleted: 12, activitiesPlanned: 16, fieldDays: 5, trainingHours: 10, evidenceScore: 80, overallRating: "Good" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 11, kpisTarget: 16, activitiesCompleted: 14, activitiesPlanned: 18, fieldDays: 8, trainingHours: 9, evidenceScore: 83, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 15, fieldDays: 7, trainingHours: 12, evidenceScore: 75, overallRating: "Good" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 5, kpisTarget: 12, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 3, trainingHours: 3, evidenceScore: 52, overallRating: "Critical" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 9, kpisTarget: 15, activitiesCompleted: 11, activitiesPlanned: 16, fieldDays: 6, trainingHours: 8, evidenceScore: 76, overallRating: "Good" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 10, kpisTarget: 16, activitiesCompleted: 13, activitiesPlanned: 18, fieldDays: 7, trainingHours: 8, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 15, fieldDays: 6, trainingHours: 10, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 5, kpisTarget: 12, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 4, trainingHours: 4, evidenceScore: 55, overallRating: "Needs Improvement" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 8, kpisTarget: 15, activitiesCompleted: 10, activitiesPlanned: 16, fieldDays: 5, trainingHours: 7, evidenceScore: 74, overallRating: "Good" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 9, kpisTarget: 16, activitiesCompleted: 12, activitiesPlanned: 18, fieldDays: 6, trainingHours: 7, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 15, fieldDays: 5, trainingHours: 9, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 4, kpisTarget: 12, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 3, trainingHours: 2, evidenceScore: 48, overallRating: "Critical" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 7, kpisTarget: 15, activitiesCompleted: 9, activitiesPlanned: 16, fieldDays: 4, trainingHours: 6, evidenceScore: 70, overallRating: "Good" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 8, kpisTarget: 16, activitiesCompleted: 11, activitiesPlanned: 18, fieldDays: 5, trainingHours: 6, evidenceScore: 75, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 15, fieldDays: 4, trainingHours: 8, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 4, kpisTarget: 12, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 3, trainingHours: 2, evidenceScore: 46, overallRating: "Critical" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 7, kpisTarget: 15, activitiesCompleted: 8, activitiesPlanned: 16, fieldDays: 4, trainingHours: 5, evidenceScore: 68, overallRating: "Needs Improvement" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-018", name: "Ananya Das", initials: "AD", role: "Program Manager", thematicArea: "Skill Development", kpisCompleted: 7, kpisTarget: 16, activitiesCompleted: 10, activitiesPlanned: 18, fieldDays: 4, trainingHours: 5, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-022", name: "Priya Mohanty", initials: "PM", role: "Training Coordinator", thematicArea: "Skill Development", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 15, fieldDays: 4, trainingHours: 7, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-029", name: "Sanjay Patel", initials: "SP", role: "Placement Officer", thematicArea: "Skill Development", kpisCompleted: 3, kpisTarget: 12, activitiesCompleted: 4, activitiesPlanned: 14, fieldDays: 2, trainingHours: 2, evidenceScore: 44, overallRating: "Critical" },
+      { id: "EMP-035", name: "Deepa Nair", initials: "DN", role: "Assessment Lead", thematicArea: "Skill Development", kpisCompleted: 6, kpisTarget: 15, activitiesCompleted: 7, activitiesPlanned: 16, fieldDays: 3, trainingHours: 4, evidenceScore: 65, overallRating: "Needs Improvement" },
+    ]},
+  ],
+  "Livelihood": [
+    { period: "July 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 12, kpisTarget: 15, activitiesCompleted: 14, activitiesPlanned: 16, fieldDays: 12, trainingHours: 8, evidenceScore: 88, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 10, kpisTarget: 13, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 14, trainingHours: 6, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 13, kpisTarget: 14, activitiesCompleted: 13, activitiesPlanned: 14, fieldDays: 10, trainingHours: 10, evidenceScore: 94, overallRating: "Excellent" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 11, kpisTarget: 15, activitiesCompleted: 13, activitiesPlanned: 16, fieldDays: 11, trainingHours: 7, evidenceScore: 84, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 9, kpisTarget: 13, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 12, trainingHours: 5, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 12, kpisTarget: 14, activitiesCompleted: 12, activitiesPlanned: 14, fieldDays: 9, trainingHours: 9, evidenceScore: 91, overallRating: "Excellent" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 10, kpisTarget: 15, activitiesCompleted: 12, activitiesPlanned: 16, fieldDays: 10, trainingHours: 6, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 8, kpisTarget: 13, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 11, trainingHours: 4, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 11, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 8, trainingHours: 8, evidenceScore: 87, overallRating: "Good" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 9, kpisTarget: 15, activitiesCompleted: 11, activitiesPlanned: 16, fieldDays: 9, trainingHours: 5, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 7, kpisTarget: 13, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 10, trainingHours: 3, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 7, trainingHours: 7, evidenceScore: 84, overallRating: "Good" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 8, kpisTarget: 15, activitiesCompleted: 10, activitiesPlanned: 16, fieldDays: 8, trainingHours: 4, evidenceScore: 73, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 6, kpisTarget: 13, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 9, trainingHours: 3, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 6, trainingHours: 6, evidenceScore: 80, overallRating: "Good" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 7, kpisTarget: 15, activitiesCompleted: 9, activitiesPlanned: 16, fieldDays: 7, trainingHours: 4, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 5, kpisTarget: 13, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 8, trainingHours: 2, evidenceScore: 58, overallRating: "Needs Improvement" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 5, trainingHours: 5, evidenceScore: 76, overallRating: "Good" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 6, kpisTarget: 15, activitiesCompleted: 8, activitiesPlanned: 16, fieldDays: 6, trainingHours: 3, evidenceScore: 66, overallRating: "Needs Improvement" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 7, trainingHours: 2, evidenceScore: 54, overallRating: "Needs Improvement" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 5, trainingHours: 4, evidenceScore: 72, overallRating: "Good" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-044", name: "Neha Sahu", initials: "NS", role: "Program Manager", thematicArea: "Livelihood", kpisCompleted: 5, kpisTarget: 15, activitiesCompleted: 7, activitiesPlanned: 16, fieldDays: 5, trainingHours: 2, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-048", name: "Rajesh Behera", initials: "RB", role: "Livelihood Officer", thematicArea: "Livelihood", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 6, trainingHours: 2, evidenceScore: 50, overallRating: "Critical" },
+      { id: "EMP-053", name: "Sunita Devi", initials: "SD", role: "SHG Coordinator", thematicArea: "Livelihood", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 4, trainingHours: 3, evidenceScore: 68, overallRating: "Needs Improvement" },
+    ]},
+  ],
+  "Entrepreneurship": [
+    { period: "July 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 13, kpisTarget: 16, activitiesCompleted: 14, activitiesPlanned: 16, fieldDays: 11, trainingHours: 14, evidenceScore: 90, overallRating: "Excellent" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 10, kpisTarget: 13, activitiesCompleted: 11, activitiesPlanned: 13, fieldDays: 8, trainingHours: 16, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 8, kpisTarget: 11, activitiesCompleted: 9, activitiesPlanned: 12, fieldDays: 13, trainingHours: 6, evidenceScore: 76, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 12, kpisTarget: 16, activitiesCompleted: 13, activitiesPlanned: 16, fieldDays: 10, trainingHours: 12, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 9, kpisTarget: 13, activitiesCompleted: 10, activitiesPlanned: 13, fieldDays: 7, trainingHours: 14, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 7, kpisTarget: 11, activitiesCompleted: 8, activitiesPlanned: 12, fieldDays: 11, trainingHours: 5, evidenceScore: 70, overallRating: "Good" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 11, kpisTarget: 16, activitiesCompleted: 12, activitiesPlanned: 16, fieldDays: 9, trainingHours: 10, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 8, kpisTarget: 13, activitiesCompleted: 9, activitiesPlanned: 13, fieldDays: 6, trainingHours: 12, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 6, kpisTarget: 11, activitiesCompleted: 7, activitiesPlanned: 12, fieldDays: 10, trainingHours: 4, evidenceScore: 64, overallRating: "Needs Improvement" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 10, kpisTarget: 16, activitiesCompleted: 11, activitiesPlanned: 16, fieldDays: 8, trainingHours: 8, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 7, kpisTarget: 13, activitiesCompleted: 8, activitiesPlanned: 13, fieldDays: 5, trainingHours: 10, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 5, kpisTarget: 11, activitiesCompleted: 6, activitiesPlanned: 12, fieldDays: 9, trainingHours: 3, evidenceScore: 58, overallRating: "Needs Improvement" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 9, kpisTarget: 16, activitiesCompleted: 10, activitiesPlanned: 16, fieldDays: 7, trainingHours: 7, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 6, kpisTarget: 13, activitiesCompleted: 7, activitiesPlanned: 13, fieldDays: 5, trainingHours: 8, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 4, kpisTarget: 11, activitiesCompleted: 5, activitiesPlanned: 12, fieldDays: 8, trainingHours: 2, evidenceScore: 52, overallRating: "Needs Improvement" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 8, kpisTarget: 16, activitiesCompleted: 9, activitiesPlanned: 16, fieldDays: 6, trainingHours: 6, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 5, kpisTarget: 13, activitiesCompleted: 6, activitiesPlanned: 13, fieldDays: 4, trainingHours: 6, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 3, kpisTarget: 11, activitiesCompleted: 4, activitiesPlanned: 12, fieldDays: 7, trainingHours: 2, evidenceScore: 48, overallRating: "Critical" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 7, kpisTarget: 16, activitiesCompleted: 8, activitiesPlanned: 16, fieldDays: 5, trainingHours: 5, evidenceScore: 66, overallRating: "Needs Improvement" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 5, activitiesPlanned: 13, fieldDays: 3, trainingHours: 5, evidenceScore: 56, overallRating: "Needs Improvement" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 3, kpisTarget: 11, activitiesCompleted: 3, activitiesPlanned: 12, fieldDays: 6, trainingHours: 1, evidenceScore: 44, overallRating: "Critical" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-032", name: "Rohan Kumar", initials: "RK", role: "Project Lead", thematicArea: "Entrepreneurship", kpisCompleted: 6, kpisTarget: 16, activitiesCompleted: 7, activitiesPlanned: 16, fieldDays: 4, trainingHours: 4, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-036", name: "Pallavi Jena", initials: "PJ", role: "Enterprise Mentor", thematicArea: "Entrepreneurship", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 4, activitiesPlanned: 13, fieldDays: 3, trainingHours: 4, evidenceScore: 52, overallRating: "Needs Improvement" },
+      { id: "EMP-039", name: "Vikram Reddy", initials: "VR", role: "Market Linkage Officer", thematicArea: "Entrepreneurship", kpisCompleted: 2, kpisTarget: 11, activitiesCompleted: 3, activitiesPlanned: 12, fieldDays: 5, trainingHours: 1, evidenceScore: 40, overallRating: "Critical" },
+    ]},
+  ],
+  "Nutrition": [
+    { period: "July 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 16, kpisTarget: 18, activitiesCompleted: 18, activitiesPlanned: 20, fieldDays: 6, trainingHours: 10, evidenceScore: 95, overallRating: "Excellent" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 12, kpisTarget: 15, activitiesCompleted: 13, activitiesPlanned: 16, fieldDays: 9, trainingHours: 12, evidenceScore: 84, overallRating: "Good" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 14, trainingHours: 6, evidenceScore: 78, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 15, kpisTarget: 18, activitiesCompleted: 17, activitiesPlanned: 20, fieldDays: 5, trainingHours: 9, evidenceScore: 92, overallRating: "Excellent" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 11, kpisTarget: 15, activitiesCompleted: 12, activitiesPlanned: 16, fieldDays: 8, trainingHours: 10, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 12, trainingHours: 5, evidenceScore: 74, overallRating: "Good" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 14, kpisTarget: 18, activitiesCompleted: 16, activitiesPlanned: 20, fieldDays: 5, trainingHours: 8, evidenceScore: 88, overallRating: "Good" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 10, kpisTarget: 15, activitiesCompleted: 11, activitiesPlanned: 16, fieldDays: 7, trainingHours: 8, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 11, trainingHours: 4, evidenceScore: 68, overallRating: "Needs Improvement" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 13, kpisTarget: 18, activitiesCompleted: 15, activitiesPlanned: 20, fieldDays: 4, trainingHours: 7, evidenceScore: 84, overallRating: "Good" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 9, kpisTarget: 15, activitiesCompleted: 10, activitiesPlanned: 16, fieldDays: 6, trainingHours: 7, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 10, trainingHours: 3, evidenceScore: 62, overallRating: "Needs Improvement" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 12, kpisTarget: 18, activitiesCompleted: 14, activitiesPlanned: 20, fieldDays: 4, trainingHours: 6, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 8, kpisTarget: 15, activitiesCompleted: 9, activitiesPlanned: 16, fieldDays: 5, trainingHours: 6, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 9, trainingHours: 3, evidenceScore: 56, overallRating: "Needs Improvement" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 11, kpisTarget: 18, activitiesCompleted: 13, activitiesPlanned: 20, fieldDays: 3, trainingHours: 5, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 7, kpisTarget: 15, activitiesCompleted: 8, activitiesPlanned: 16, fieldDays: 5, trainingHours: 5, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 8, trainingHours: 2, evidenceScore: 50, overallRating: "Critical" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 10, kpisTarget: 18, activitiesCompleted: 12, activitiesPlanned: 20, fieldDays: 3, trainingHours: 4, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 6, kpisTarget: 15, activitiesCompleted: 7, activitiesPlanned: 16, fieldDays: 4, trainingHours: 4, evidenceScore: 60, overallRating: "Needs Improvement" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 7, trainingHours: 2, evidenceScore: 46, overallRating: "Critical" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-041", name: "Meera Roy", initials: "MR", role: "M&E Specialist", thematicArea: "Nutrition", kpisCompleted: 9, kpisTarget: 18, activitiesCompleted: 11, activitiesPlanned: 20, fieldDays: 2, trainingHours: 3, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-045", name: "Geeta Mahapatra", initials: "GM", role: "Nutrition Counsellor", thematicArea: "Nutrition", kpisCompleted: 5, kpisTarget: 15, activitiesCompleted: 6, activitiesPlanned: 16, fieldDays: 4, trainingHours: 3, evidenceScore: 55, overallRating: "Needs Improvement" },
+      { id: "EMP-050", name: "Arvind Mishra", initials: "AM", role: "Community Health Worker", thematicArea: "Nutrition", kpisCompleted: 4, kpisTarget: 14, activitiesCompleted: 4, activitiesPlanned: 14, fieldDays: 6, trainingHours: 1, evidenceScore: 42, overallRating: "Critical" },
+    ]},
+  ],
+  "Health": [
+    { period: "July 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 18, kpisTarget: 20, activitiesCompleted: 19, activitiesPlanned: 22, fieldDays: 15, trainingHours: 8, evidenceScore: 91, overallRating: "Excellent" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 14, kpisTarget: 17, activitiesCompleted: 15, activitiesPlanned: 18, fieldDays: 12, trainingHours: 10, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 11, kpisTarget: 15, activitiesCompleted: 12, activitiesPlanned: 16, fieldDays: 16, trainingHours: 6, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 9, kpisTarget: 13, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 10, trainingHours: 12, evidenceScore: 74, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 17, kpisTarget: 20, activitiesCompleted: 18, activitiesPlanned: 22, fieldDays: 14, trainingHours: 7, evidenceScore: 88, overallRating: "Good" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 13, kpisTarget: 17, activitiesCompleted: 14, activitiesPlanned: 18, fieldDays: 11, trainingHours: 9, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 10, kpisTarget: 15, activitiesCompleted: 11, activitiesPlanned: 16, fieldDays: 14, trainingHours: 5, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 8, kpisTarget: 13, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 9, trainingHours: 10, evidenceScore: 70, overallRating: "Good" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 16, kpisTarget: 20, activitiesCompleted: 17, activitiesPlanned: 22, fieldDays: 13, trainingHours: 6, evidenceScore: 84, overallRating: "Good" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 12, kpisTarget: 17, activitiesCompleted: 13, activitiesPlanned: 18, fieldDays: 10, trainingHours: 8, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 9, kpisTarget: 15, activitiesCompleted: 10, activitiesPlanned: 16, fieldDays: 12, trainingHours: 4, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 7, kpisTarget: 13, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 8, trainingHours: 8, evidenceScore: 64, overallRating: "Needs Improvement" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 15, kpisTarget: 20, activitiesCompleted: 16, activitiesPlanned: 22, fieldDays: 12, trainingHours: 5, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 11, kpisTarget: 17, activitiesCompleted: 12, activitiesPlanned: 18, fieldDays: 9, trainingHours: 7, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 8, kpisTarget: 15, activitiesCompleted: 9, activitiesPlanned: 16, fieldDays: 11, trainingHours: 3, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 6, kpisTarget: 13, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 7, trainingHours: 6, evidenceScore: 58, overallRating: "Needs Improvement" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 14, kpisTarget: 20, activitiesCompleted: 15, activitiesPlanned: 22, fieldDays: 11, trainingHours: 5, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 10, kpisTarget: 17, activitiesCompleted: 11, activitiesPlanned: 18, fieldDays: 8, trainingHours: 6, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 7, kpisTarget: 15, activitiesCompleted: 8, activitiesPlanned: 16, fieldDays: 10, trainingHours: 3, evidenceScore: 58, overallRating: "Needs Improvement" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 5, kpisTarget: 13, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 6, trainingHours: 5, evidenceScore: 52, overallRating: "Needs Improvement" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 13, kpisTarget: 20, activitiesCompleted: 14, activitiesPlanned: 22, fieldDays: 10, trainingHours: 4, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 9, kpisTarget: 17, activitiesCompleted: 10, activitiesPlanned: 18, fieldDays: 7, trainingHours: 5, evidenceScore: 66, overallRating: "Needs Improvement" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 6, kpisTarget: 15, activitiesCompleted: 7, activitiesPlanned: 16, fieldDays: 9, trainingHours: 2, evidenceScore: 52, overallRating: "Needs Improvement" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 5, trainingHours: 4, evidenceScore: 46, overallRating: "Critical" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 12, kpisTarget: 20, activitiesCompleted: 13, activitiesPlanned: 22, fieldDays: 9, trainingHours: 3, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 8, kpisTarget: 17, activitiesCompleted: 9, activitiesPlanned: 18, fieldDays: 6, trainingHours: 4, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 5, kpisTarget: 15, activitiesCompleted: 6, activitiesPlanned: 16, fieldDays: 8, trainingHours: 2, evidenceScore: 48, overallRating: "Critical" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 4, kpisTarget: 13, activitiesCompleted: 4, activitiesPlanned: 14, fieldDays: 5, trainingHours: 3, evidenceScore: 42, overallRating: "Critical" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-057", name: "Amit Singh", initials: "AS", role: "Field Coordinator", thematicArea: "Health", kpisCompleted: 11, kpisTarget: 20, activitiesCompleted: 12, activitiesPlanned: 22, fieldDays: 8, trainingHours: 3, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-060", name: "Ritu Sharma", initials: "RS", role: "Health Program Officer", thematicArea: "Health", kpisCompleted: 7, kpisTarget: 17, activitiesCompleted: 8, activitiesPlanned: 18, fieldDays: 5, trainingHours: 3, evidenceScore: 58, overallRating: "Needs Improvement" },
+      { id: "EMP-063", name: "Manoj Yadav", initials: "MY", role: "Clinical Outreach Lead", thematicArea: "Health", kpisCompleted: 4, kpisTarget: 15, activitiesCompleted: 5, activitiesPlanned: 16, fieldDays: 7, trainingHours: 1, evidenceScore: 44, overallRating: "Critical" },
+      { id: "EMP-068", name: "Lakshmi Bose", initials: "LB", role: "Community Health Supervisor", thematicArea: "Health", kpisCompleted: 3, kpisTarget: 13, activitiesCompleted: 3, activitiesPlanned: 14, fieldDays: 4, trainingHours: 2, evidenceScore: 38, overallRating: "Critical" },
+    ]},
+  ],
+  "Sanitation": [
+    { period: "July 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 10, trainingHours: 6, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 12, kpisTarget: 14, activitiesCompleted: 13, activitiesPlanned: 14, fieldDays: 14, trainingHours: 4, evidenceScore: 88, overallRating: "Good" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 8, kpisTarget: 12, activitiesCompleted: 9, activitiesPlanned: 12, fieldDays: 12, trainingHours: 8, evidenceScore: 72, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 9, trainingHours: 5, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 11, kpisTarget: 14, activitiesCompleted: 12, activitiesPlanned: 14, fieldDays: 13, trainingHours: 3, evidenceScore: 84, overallRating: "Good" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 7, kpisTarget: 12, activitiesCompleted: 8, activitiesPlanned: 12, fieldDays: 11, trainingHours: 7, evidenceScore: 68, overallRating: "Needs Improvement" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 8, trainingHours: 5, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 12, trainingHours: 3, evidenceScore: 80, overallRating: "Good" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 6, kpisTarget: 12, activitiesCompleted: 7, activitiesPlanned: 12, fieldDays: 10, trainingHours: 6, evidenceScore: 62, overallRating: "Needs Improvement" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 7, trainingHours: 4, evidenceScore: 66, overallRating: "Needs Improvement" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 11, trainingHours: 2, evidenceScore: 76, overallRating: "Good" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 5, kpisTarget: 12, activitiesCompleted: 6, activitiesPlanned: 12, fieldDays: 9, trainingHours: 5, evidenceScore: 56, overallRating: "Needs Improvement" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 6, trainingHours: 3, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 10, trainingHours: 2, evidenceScore: 72, overallRating: "Good" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 4, kpisTarget: 12, activitiesCompleted: 5, activitiesPlanned: 12, fieldDays: 8, trainingHours: 4, evidenceScore: 50, overallRating: "Critical" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 5, trainingHours: 3, evidenceScore: 58, overallRating: "Needs Improvement" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 9, trainingHours: 2, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 3, kpisTarget: 12, activitiesCompleted: 4, activitiesPlanned: 12, fieldDays: 7, trainingHours: 3, evidenceScore: 44, overallRating: "Critical" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 4, kpisTarget: 14, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 4, trainingHours: 2, evidenceScore: 54, overallRating: "Needs Improvement" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 8, trainingHours: 1, evidenceScore: 64, overallRating: "Needs Improvement" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 3, kpisTarget: 12, activitiesCompleted: 3, activitiesPlanned: 12, fieldDays: 6, trainingHours: 2, evidenceScore: 40, overallRating: "Critical" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-064", name: "Kavita Jain", initials: "KJ", role: "Program Officer", thematicArea: "Sanitation", kpisCompleted: 3, kpisTarget: 14, activitiesCompleted: 4, activitiesPlanned: 14, fieldDays: 4, trainingHours: 2, evidenceScore: 50, overallRating: "Critical" },
+      { id: "EMP-067", name: "Suresh Nayak", initials: "SN", role: "WASH Engineer", thematicArea: "Sanitation", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 7, trainingHours: 1, evidenceScore: 60, overallRating: "Needs Improvement" },
+      { id: "EMP-070", name: "Puja Oram", initials: "PO", role: "Community Mobilizer", thematicArea: "Sanitation", kpisCompleted: 2, kpisTarget: 12, activitiesCompleted: 2, activitiesPlanned: 12, fieldDays: 5, trainingHours: 2, evidenceScore: 36, overallRating: "Critical" },
+    ]},
+  ],
+  "Climate Change": [
+    { period: "July 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 14, kpisTarget: 17, activitiesCompleted: 15, activitiesPlanned: 17, fieldDays: 12, trainingHours: 10, evidenceScore: 90, overallRating: "Excellent" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 11, kpisTarget: 14, activitiesCompleted: 12, activitiesPlanned: 14, fieldDays: 8, trainingHours: 14, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 9, kpisTarget: 12, activitiesCompleted: 10, activitiesPlanned: 13, fieldDays: 16, trainingHours: 4, evidenceScore: 76, overallRating: "Good" },
+    ]},
+    { period: "June 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 13, kpisTarget: 17, activitiesCompleted: 14, activitiesPlanned: 17, fieldDays: 11, trainingHours: 9, evidenceScore: 86, overallRating: "Good" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 10, kpisTarget: 14, activitiesCompleted: 11, activitiesPlanned: 14, fieldDays: 7, trainingHours: 12, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 8, kpisTarget: 12, activitiesCompleted: 9, activitiesPlanned: 13, fieldDays: 14, trainingHours: 3, evidenceScore: 72, overallRating: "Good" },
+    ]},
+    { period: "May 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 12, kpisTarget: 17, activitiesCompleted: 13, activitiesPlanned: 17, fieldDays: 10, trainingHours: 8, evidenceScore: 82, overallRating: "Good" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 9, kpisTarget: 14, activitiesCompleted: 10, activitiesPlanned: 14, fieldDays: 6, trainingHours: 10, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 7, kpisTarget: 12, activitiesCompleted: 8, activitiesPlanned: 13, fieldDays: 12, trainingHours: 3, evidenceScore: 66, overallRating: "Needs Improvement" },
+    ]},
+    { period: "April 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 11, kpisTarget: 17, activitiesCompleted: 12, activitiesPlanned: 17, fieldDays: 9, trainingHours: 7, evidenceScore: 78, overallRating: "Good" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 8, kpisTarget: 14, activitiesCompleted: 9, activitiesPlanned: 14, fieldDays: 5, trainingHours: 8, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 6, kpisTarget: 12, activitiesCompleted: 7, activitiesPlanned: 13, fieldDays: 11, trainingHours: 2, evidenceScore: 60, overallRating: "Needs Improvement" },
+    ]},
+    { period: "March 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 10, kpisTarget: 17, activitiesCompleted: 11, activitiesPlanned: 17, fieldDays: 8, trainingHours: 6, evidenceScore: 74, overallRating: "Good" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 7, kpisTarget: 14, activitiesCompleted: 8, activitiesPlanned: 14, fieldDays: 4, trainingHours: 7, evidenceScore: 68, overallRating: "Needs Improvement" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 5, kpisTarget: 12, activitiesCompleted: 6, activitiesPlanned: 13, fieldDays: 10, trainingHours: 2, evidenceScore: 54, overallRating: "Needs Improvement" },
+    ]},
+    { period: "February 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 9, kpisTarget: 17, activitiesCompleted: 10, activitiesPlanned: 17, fieldDays: 7, trainingHours: 5, evidenceScore: 70, overallRating: "Good" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 6, kpisTarget: 14, activitiesCompleted: 7, activitiesPlanned: 14, fieldDays: 4, trainingHours: 6, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 4, kpisTarget: 12, activitiesCompleted: 5, activitiesPlanned: 13, fieldDays: 9, trainingHours: 1, evidenceScore: 48, overallRating: "Critical" },
+    ]},
+    { period: "January 2026", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 8, kpisTarget: 17, activitiesCompleted: 9, activitiesPlanned: 17, fieldDays: 6, trainingHours: 4, evidenceScore: 66, overallRating: "Needs Improvement" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 5, kpisTarget: 14, activitiesCompleted: 6, activitiesPlanned: 14, fieldDays: 3, trainingHours: 5, evidenceScore: 56, overallRating: "Needs Improvement" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 3, kpisTarget: 12, activitiesCompleted: 4, activitiesPlanned: 13, fieldDays: 8, trainingHours: 1, evidenceScore: 42, overallRating: "Critical" },
+    ]},
+    { period: "December 2025", employees: [
+      { id: "EMP-071", name: "Imran Ali", initials: "IA", role: "Climate Lead", thematicArea: "Climate Change", kpisCompleted: 7, kpisTarget: 17, activitiesCompleted: 8, activitiesPlanned: 17, fieldDays: 5, trainingHours: 3, evidenceScore: 62, overallRating: "Needs Improvement" },
+      { id: "EMP-074", name: "Nandini Prusty", initials: "NP", role: "GIS & Environment Officer", thematicArea: "Climate Change", kpisCompleted: 4, kpisTarget: 14, activitiesCompleted: 5, activitiesPlanned: 14, fieldDays: 3, trainingHours: 4, evidenceScore: 52, overallRating: "Needs Improvement" },
+      { id: "EMP-078", name: "Tapan Samal", initials: "TS", role: "Plantation Supervisor", thematicArea: "Climate Change", kpisCompleted: 2, kpisTarget: 12, activitiesCompleted: 3, activitiesPlanned: 13, fieldDays: 7, trainingHours: 1, evidenceScore: 38, overallRating: "Critical" },
+    ]},
+  ],
+};

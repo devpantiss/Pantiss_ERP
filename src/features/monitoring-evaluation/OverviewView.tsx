@@ -1,14 +1,18 @@
-import { Activity, ArrowUpRight, Banknote, BriefcaseBusiness, CheckCircle2, ChevronLeft, MapPin, Target, UsersRound } from "lucide-react";
+import { Activity, ArrowUpRight, Banknote, BriefcaseBusiness, CheckCircle2, ChevronLeft, MapPin, ShieldCheck, Target, UsersRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { projects, thematicAreas, type ThematicAreaMetric } from "./data";
 
 const kpis = [
-  { label: "Active social-sector projects", value: "44", change: "Across 7 thematic areas", icon: BriefcaseBusiness },
-  { label: "Verified beneficiaries", value: "83.2K", change: "92% records evidence-verified", icon: UsersRound },
+  { label: "Projects in the portfolio", value: "44", change: "Across 7 thematic areas", icon: BriefcaseBusiness },
+  { label: "Verified participants reached", value: "83.2K", change: "92% records evidence-verified", icon: UsersRound },
   { label: "Outcome indicators on track", value: "72%", change: "+4.2 points this quarter", icon: Target },
-  { label: "Grant utilization verified", value: "₹11.3 Cr", change: "68% of approved allocation", icon: Banknote },
+  { label: "Verified grant utilization", value: "₹11.3 Cr", change: "74% of ₹15.3 Cr approved", icon: Banknote },
+  { label: "Implementation districts", value: "29", change: "Across 6 states", icon: MapPin },
+  { label: "Monthly data validation", value: "87%", change: "Submitted and quality-checked", icon: ShieldCheck },
+  { label: "Projects requiring action", value: "8", change: "Management response plans active", icon: Activity },
+  { label: "Completed projects", value: "6", change: "Closure evidence verified", icon: CheckCircle2 },
 ];
 
 const thematicKpiIcons = [UsersRound, CheckCircle2, Target, Activity];
@@ -17,7 +21,6 @@ export function OverviewView() {
   const [selectedArea, setSelectedArea] = useState<ThematicAreaMetric | null>(null);
 
   const openThematicArea = (area: ThematicAreaMetric) => {
-    if (area.name !== "Skill Development") return;
     setSelectedArea(area);
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   };
@@ -40,7 +43,7 @@ export function OverviewView() {
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em]"><Activity size={13} /> Portfolio pulse</span>
             <h2 className="mt-5 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Impact across all thematic areas</h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">A consolidated M&E view of social-development project delivery, verified reach, outcome achievement and grant utilization across Pantiss programmes.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">A consolidated M&E view of social-development delivery, verified reach, outcome achievement and grant utilization across Pantiss programmes.</p>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-black/10 px-4 py-3 backdrop-blur">
             <span className="grid size-9 place-items-center rounded-xl bg-white/15"><CheckCircle2 size={18} /></span>
@@ -49,7 +52,7 @@ export function OverviewView() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Portfolio summary">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Detailed portfolio KPI summary">
         {kpis.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -98,14 +101,11 @@ export function OverviewView() {
       </section>
 
       <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><h3 className="text-base font-semibold text-[var(--text)]">Thematic area performance</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Verified outcome progress, beneficiary reach and approved allocation</p></div><span className="w-fit rounded-xl border border-red-500/20 bg-red-500/[0.05] px-3 py-2 text-[10px] text-red-600 dark:text-red-400">Skill Development dashboard available</span></div>
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><h3 className="text-base font-semibold text-[var(--text)]">Thematic impact scorecards</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Headline outputs and verified outcome measures from every thematic portfolio</p></div><span className="w-fit rounded-xl border border-red-500/20 bg-red-500/[0.05] px-3 py-2 text-[10px] text-red-600 dark:text-red-400">Select a scorecard for full details</span></div>
+        <div className="mt-6 grid gap-4 xl:grid-cols-2">
           {thematicAreas.map((area) => {
-            const available = area.name === "Skill Development";
-            const content = <><div className="flex items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-2.5"><span className="size-2 rounded-full" style={{ background: area.color }} /><span className="truncate text-xs font-semibold text-[var(--text)]">{area.name}</span></span><span className="text-xs font-semibold text-[var(--text)]">{area.progress}%</span></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full" style={{ width: `${area.progress}%`, background: area.color }} /></div><div className="mt-4 flex items-center justify-between text-[10px] text-[var(--text-subtle)]"><span>{area.projects} projects</span><span>{area.reach} verified</span><span className="flex items-center gap-1">{area.budget}{available && <ArrowUpRight size={11} className="opacity-50 transition-opacity group-hover:opacity-100" />}</span></div></>;
-            return available
-              ? <button type="button" key={area.name} onClick={() => openThematicArea(area)} className="focus-ring group rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-red-500/35 hover:shadow-[0_12px_30px_rgba(220,38,38,.08)]" aria-label="Open Skill Development dashboard">{content}</button>
-              : <article key={area.name} aria-disabled="true" className="cursor-default rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left opacity-65">{content}</article>;
+            const content = <><div className="flex items-start justify-between gap-4"><span className="flex min-w-0 items-center gap-3"><span className="mt-1 size-2.5 shrink-0 rounded-full" style={{ background: area.color }} /><span><span className="block text-sm font-semibold text-[var(--text)]">{area.name}</span><span className="mt-1 block text-[10px] text-[var(--text-subtle)]">{area.projects} projects · {area.reach} verified reach · {area.budget}</span></span></span><span className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[var(--text)]">{area.progress}%<ArrowUpRight size={13} className="text-[var(--text-subtle)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full transition-all" style={{ width: `${area.progress}%`, background: area.color }} /></div><div className="mt-4 grid grid-cols-2 gap-2">{area.kpis.map((item) => <span key={item.label} className="rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3"><span className="block text-lg font-semibold tracking-[-0.03em] text-[var(--text)]">{item.value}</span><span className="mt-1 block text-[10px] font-medium leading-4 text-[var(--text-muted)]">{item.label}</span><span className="mt-1 block text-[9px] leading-4 text-[var(--text-subtle)]">{item.note}</span></span>)}</div></>;
+            return <button type="button" key={area.name} onClick={() => openThematicArea(area)} className="focus-ring group rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-red-500/35 hover:shadow-[0_12px_30px_rgba(220,38,38,.08)] sm:p-5" aria-label={`Open ${area.name} dashboard`}>{content}</button>;
           })}
         </div>
       </section>
@@ -117,6 +117,7 @@ function ThematicAreaDashboard({ area, onBack }: { area: ThematicAreaMetric; onB
   const navigate = useNavigate();
   const areaProjects = projects.filter((project) => project.area === area.name);
   const trend = [Math.max(22, area.progress - 26), area.progress - 19, area.progress - 14, area.progress - 10, area.progress - 5, area.progress];
+  const isSkillDevelopment = area.name === "Skill Development";
 
   return (
     <motion.div initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
@@ -127,8 +128,8 @@ function ThematicAreaDashboard({ area, onBack }: { area: ThematicAreaMetric; onB
       <section className="relative overflow-hidden rounded-[28px] border border-red-500/15 bg-gradient-to-br from-red-800 via-red-600 to-rose-500 p-6 text-white shadow-[0_24px_70px_rgba(220,38,38,.18)] sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
         <div className="relative flex flex-col justify-between gap-7 md:flex-row md:items-end">
-          <div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em]"><span className="size-1.5 rounded-full bg-white" />Thematic M&E dashboard</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">{area.name}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Focused evidence view of Pantiss social-development projects, verified beneficiaries, logframe indicators and utilization within {area.name}.</p></div>
-          <div className="min-w-44 rounded-2xl border border-white/15 bg-black/10 p-4 backdrop-blur"><div className="flex items-end justify-between"><span className="text-[10px] text-white/60">Indicators achieved</span><span className="text-2xl font-semibold">{area.progress}%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-white" style={{ width: `${area.progress}%` }} /></div></div>
+          <div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em]"><span className="size-1.5 rounded-full bg-white" />Thematic M&E dashboard</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">{area.name}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{isSkillDevelopment ? "Evidence-led monitoring of mobilization, enrollment, attendance, completion, assessment, certification, placement and employment retention." : `Focused monitoring of reach, delivery quality, sector outcomes and verified evidence across the ${area.name} portfolio.`}</p></div>
+          <div className="min-w-44 rounded-2xl border border-white/15 bg-black/10 p-4 backdrop-blur"><div className="flex items-end justify-between"><span className="text-[10px] text-white/60">Outcome target achievement</span><span className="text-2xl font-semibold">{area.progress}%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-white" style={{ width: `${area.progress}%` }} /></div></div>
         </div>
       </section>
 
@@ -138,7 +139,7 @@ function ThematicAreaDashboard({ area, onBack }: { area: ThematicAreaMetric; onB
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,.8fr)]">
         <article className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex items-start justify-between"><div><h3 className="text-base font-semibold text-[var(--text)]">Verified outcome trend</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Six-month cumulative logframe achievement</p></div><span className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-500">On track</span></div>
+          <div className="flex items-start justify-between"><div><h3 className="text-base font-semibold text-[var(--text)]">{isSkillDevelopment ? "Employment outcome trend" : "Verified outcome trend"}</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">{isSkillDevelopment ? "Six-month cumulative placement and self-employment verification" : "Six-month cumulative achievement against the approved results framework"}</p></div><span className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-500">On track</span></div>
           <div className="mt-8 flex h-56 items-end gap-3 sm:gap-5">{trend.map((value, index) => <div key={index} className="flex h-full flex-1 flex-col justify-end gap-2"><span className="text-center text-[9px] font-semibold text-[var(--text-subtle)]">{value}%</span><div className="w-full rounded-t-lg bg-gradient-to-t from-red-700 to-rose-400 transition-all" style={{ height: `${value}%` }} /><span className="text-center text-[9px] text-[var(--text-subtle)]">{["Feb", "Mar", "Apr", "May", "Jun", "Jul"][index]}</span></div>)}</div>
         </article>
         <article className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><h3 className="text-base font-semibold text-[var(--text)]">{area.name} outcome indicators</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Sector-specific verified performance against approved targets</p><div className="mt-6 space-y-5">{area.indicators.map((indicator) => <div key={indicator.label}><div className="flex items-center justify-between text-xs"><span className="text-[var(--text-muted)]">{indicator.label}</span><span className="font-semibold text-[var(--text)]">{indicator.value}%</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400" style={{ width: `${indicator.value}%` }} /></div></div>)}</div></article>

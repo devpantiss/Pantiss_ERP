@@ -37,7 +37,12 @@ export interface SkillCenter {
   batches: number;
   learners: number;
   attendance: number;
+  completion: number;
+  certification: number;
   placement: number;
+  retention: number;
+  womenShare: number;
+  evidence: number;
   health: "Healthy" | "Watch";
   candidates: SkillCandidate[];
 }
@@ -84,10 +89,10 @@ function makeCandidates(centerCode: string, jobRole: string, count: number): Ski
 }
 
 export const skillCenters: SkillCenter[] = [
-  { id: "angul", name: "Angul Skill Development Center", district: "Angul", manager: "Subhasis Patnaik", batches: 5, learners: 326, attendance: 91, placement: 72, health: "Healthy", candidates: makeCandidates("ANG", "Electrical Technician", 20) },
-  { id: "keonjhar", name: "Keonjhar Skill Development Center", district: "Keonjhar", manager: "Madhusmita Nayak", batches: 4, learners: 284, attendance: 88, placement: 66, health: "Healthy", candidates: makeCandidates("KEO", "Industrial Electrician", 18) },
-  { id: "sundargarh", name: "Sundargarh Training Center", district: "Sundargarh", manager: "Pradeep Sahu", batches: 5, learners: 348, attendance: 84, placement: 61, health: "Watch", candidates: makeCandidates("SUN", "Fitter – Mechanical Assembly", 20) },
-  { id: "jajpur", name: "Jajpur Skills & Livelihood Center", district: "Jajpur", manager: "Rashmi Das", batches: 4, learners: 290, attendance: 89, placement: 69, health: "Healthy", candidates: makeCandidates("JAJ", "Welding Technician", 18) },
+  { id: "angul", name: "Angul Skill Development Center", district: "Angul", manager: "Subhasis Patnaik", batches: 5, learners: 326, attendance: 91, completion: 88, certification: 82, placement: 72, retention: 67, womenShare: 51, evidence: 96, health: "Healthy", candidates: makeCandidates("ANG", "Electrical Technician", 20) },
+  { id: "keonjhar", name: "Keonjhar Skill Development Center", district: "Keonjhar", manager: "Madhusmita Nayak", batches: 4, learners: 284, attendance: 88, completion: 86, certification: 79, placement: 66, retention: 63, womenShare: 56, evidence: 92, health: "Healthy", candidates: makeCandidates("KEO", "Industrial Electrician", 18) },
+  { id: "sundargarh", name: "Sundargarh Training Center", district: "Sundargarh", manager: "Pradeep Sahu", batches: 5, learners: 348, attendance: 84, completion: 79, certification: 72, placement: 61, retention: 55, womenShare: 48, evidence: 84, health: "Watch", candidates: makeCandidates("SUN", "Fitter – Mechanical Assembly", 20) },
+  { id: "jajpur", name: "Jajpur Skills & Livelihood Center", district: "Jajpur", manager: "Rashmi Das", batches: 4, learners: 290, attendance: 89, completion: 87, certification: 80, placement: 69, retention: 65, womenShare: 58, evidence: 94, health: "Healthy", candidates: makeCandidates("JAJ", "Welding Technician", 18) },
 ];
 
 export const skillProjectTeam = [
@@ -98,12 +103,12 @@ export const skillProjectTeam = [
 ];
 
 export const skillEvidence = [
-  { title: "Enrollment documentation", category: "Enrollment", stage: "Mobilization", date: "08 Jul 2026" },
-  { title: "Classroom delivery", category: "Training", stage: "Learning", date: "11 Jul 2026" },
-  { title: "Practical lab session", category: "Training", stage: "Assessment", date: "14 Jul 2026" },
-  { title: "Candidate counselling", category: "Enrollment", stage: "Verification", date: "17 Jul 2026" },
-  { title: "Employer connect", category: "Placements", stage: "Interview", date: "22 Jul 2026" },
-  { title: "Certification review", category: "Compliance", stage: "Evidence", date: "25 Jul 2026" },
-  { title: "Placement readiness", category: "Placements", stage: "Readiness", date: "28 Jul 2026" },
-  { title: "Center operations", category: "Compliance", stage: "Monitoring", date: "31 Jul 2026" },
+  { title: "Enrollment documentation", category: "Enrollment", stage: "Mobilization", date: "08 Jul 2026", image: "/images/skill-development/enrollment-counselling.jpg", alt: "Trainees completing enrollment documents at a skill center" },
+  { title: "Electrical workshop delivery", category: "Training", stage: "Learning", date: "11 Jul 2026", image: "/images/skill-development/electrical-training.jpg", alt: "Electrical technician trainees practicing under instructor supervision" },
+  { title: "Industry exposure visit", category: "Training", stage: "Exposure", date: "14 Jul 2026", image: "/images/skill-development/industry-exposure.jpg", alt: "Vocational trainees attending an industrial exposure visit" },
+  { title: "Candidate counselling", category: "Enrollment", stage: "Verification", date: "17 Jul 2026", image: "/images/skill-development/enrollment-counselling.jpg", alt: "Young trainees receiving enrollment guidance" },
+  { title: "Employer connect", category: "Placements", stage: "Interview", date: "22 Jul 2026", image: "/images/skill-development/placement-drive.jpg", alt: "A trainee speaking with an employer during a placement drive" },
+  { title: "Safety compliance review", category: "Compliance", stage: "Evidence", date: "25 Jul 2026", image: "/images/skill-development/industry-exposure.jpg", alt: "Trainees wearing protective equipment inside an industrial facility" },
+  { title: "Placement readiness", category: "Placements", stage: "Readiness", date: "28 Jul 2026", image: "/images/skill-development/placement-drive.jpg", alt: "Candidates participating in employer interviews" },
+  { title: "Center operations", category: "Compliance", stage: "Monitoring", date: "31 Jul 2026", image: "/images/skill-development/electrical-training.jpg", alt: "Instructor monitoring a practical electrical workshop" },
 ];

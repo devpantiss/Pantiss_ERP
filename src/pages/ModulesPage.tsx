@@ -20,6 +20,10 @@ export default function ModulesPage() {
   const [selectedModule, setSelectedModule] = useState<ModuleItem | null>(null);
   const closeLogin = useCallback(() => setSelectedModule(null), []);
   const openModule = useCallback((module: ModuleItem) => {
+    if (module.id === "finance" && user?.moduleId === module.id) {
+      navigate("/finance/dashboard");
+      return;
+    }
     if (module.id === "monitoring-evaluation" && user?.moduleId === module.id) {
       navigate(`/monitoring-evaluation/${user.allowedSections[0]}`);
       return;
@@ -27,6 +31,9 @@ export default function ModulesPage() {
     setSelectedModule(module);
   }, [navigate, user]);
   const handleAuthenticated = useCallback((authenticatedUser: AuthUser) => {
+    if (selectedModule?.id === "finance") {
+      navigate("/finance/dashboard");
+    }
     if (selectedModule?.id === "monitoring-evaluation") {
       navigate(`/monitoring-evaluation/${authenticatedUser.allowedSections[0]}`);
     }

@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Zoho Projects-Style Overlay System                                */
+/*  Shared backdrop, surface, header, body, footer primitives          */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Backdrop ── */
+.zo-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Layout per variant */
+.zo-backdrop[data-variant="panel"] {
+  justify-content: flex-end;
+}
+
+.zo-backdrop[data-variant="modal"] {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+  overflow: hidden;
+}
+
+.zo-backdrop[data-variant="fullscreen"] {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ── Surface (card / panel / sheet) ── */
+.zo-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--module-bg);
+  overflow: hidden;
+}
+
+/* Panel variant — full-height right sheet */
+.zo-surface--panel {
+  height: 100%;
+  border-left: 1px solid var(--border);
+  box-shadow:
+    -20px 0 60px rgba(0, 0, 0, 0.12),
+    -4px 0 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Modal variant — centered card */
+.zo-surface--modal {
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  border: 0;
+  border-left: 1px solid var(--border);
+  box-shadow:
+    -20px 0 60px rgba(0, 0, 0, 0.14),
+    -4px 0 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Fullscreen variant — flush right-side workspace */
+.zo-surface--fullscreen {
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  border: 0;
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.16);
+}
+
+/* ── Size tokens ── */
+.zo-overlay--sm { width: 100%; max-width: 480px; }
+.zo-overlay--md { width: 100%; max-width: 620px; }
+.zo-overlay--lg { width: 100%; max-width: 780px; }
+.zo-overlay--xl { width: 100%; max-width: 1040px; }
+.zo-overlay--2xl { width: 100%; max-width: 1280px; }
+.zo-overlay--full { width: 100%; }
+
+/* ── Header ── */
+.zo-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--module-bg);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+@media (min-width: 640px) {
+  .zo-header {
+    padding: 1.5rem 1.75rem;
+  }
+}
+
+.zo-header__text {
+  min-width: 0;
+  flex: 1;
+}
+
+.zo-header__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--brand-primary);
+  margin: 0 0 0.5rem;
+  line-height: 1;
+}
+
+.zo-header__title {
+  font-size: 1.25rem;
+  font-weight: 650;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.zo-header__description {
+  font-size: 12px;
+  color: var(--text-subtle);
+  margin: 0.375rem 0 0;
+  line-height: 1.5;
+}
+
+.zo-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ── Close button ── */
+.zo-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.zo-close:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ── Body ── */
+.zo-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* ── Footer ── */
+.zo-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--module-bg);
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* ── Legacy dialog bridge ───────────────────────────────────────────
+   Gives older feature dialogs the same compact Zoho Projects visual
+   language while they migrate to the shared <Overlay> component. */
+.zo-projects-backdrop {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: flex-end !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: rgba(15, 23, 42, 0.46) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  animation: zo-overlay-fade-in 160ms ease-out both;
+}
+
+.zo-projects-surface {
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border: 1px solid var(--border-strong) !important;
+  border-width: 0 0 0 1px !important;
+  border-radius: 0 !important;
+  background: var(--module-bg) !important;
+  color: var(--text) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.2), 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  animation: zo-overlay-enter 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.zo-projects-panel {
+  border-radius: 0 !important;
+  border-width: 0 0 0 1px !important;
+  box-shadow: -16px 0 42px rgba(15, 23, 42, 0.16) !important;
+}
+
+.zo-projects-header {
+  min-height: 64px;
+  border-color: var(--border) !important;
+  background: var(--module-bg) !important;
+  color: var(--text) !important;
+}
+
+.zo-projects-footer {
+  border-color: var(--border) !important;
+  background: var(--module-bg) !important;
+}
+
+.zo-projects-surface .rounded-2xl,
+.zo-projects-surface .rounded-xl {
+  border-radius: 6px !important;
+}
+
+.zo-projects-surface .rounded-lg {
+  border-radius: 4px !important;
+}
+
+.zo-projects-surface [class*="border-white"] {
+  border-color: var(--border) !important;
+}
+
+.zo-projects-surface .text-white {
+  color: var(--text) !important;
+}
+
+.zo-projects-surface .text-slate-200,
+.zo-projects-surface .text-slate-300,
+.zo-projects-surface .text-slate-400 {
+  color: var(--text-muted) !important;
+}
+
+.zo-projects-surface .text-slate-500 {
+  color: var(--text-subtle) !important;
+}
+
+.dark .zo-projects-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .zo-projects-surface {
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.48) !important;
+}
+
+@keyframes zo-overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zo-overlay-enter {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 639px) {
+  .zo-projects-surface {
+    min-height: 100%;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .zo-footer {
+    padding: 1rem 1.75rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Dark-mode overrides                                                */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+.dark .zo-backdrop {
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.dark .zo-surface--panel {
+  box-shadow:
+    -24px 0 70px rgba(0, 0, 0, 0.35),
+    -4px 0 20px rgba(0, 0, 0, 0.18);
+}
+
+.dark .zo-surface--modal {
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.4),
+    0 10px 28px rgba(0, 0, 0, 0.15);
+}
+
+.dark .zo-surface--fullscreen {
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.4);
+}
+
+.dark .zo-close {
+  border-color: var(--border);
+  color: var(--text-subtle);
+}
+
+.dark .zo-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Responsive refinements                                             */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* Panels go fullwidth on mobile */
+@media (max-width: 639px) {
+  .zo-surface--panel {
+    max-width: 100% !important;
+  }
+
+  .zo-surface--modal {
+    border-radius: 16px;
+  }
+
+  .zo-surface--fullscreen {
+    border-radius: 12px;
+  }
+}
