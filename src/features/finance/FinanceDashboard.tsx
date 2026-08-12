@@ -44,15 +44,34 @@ function PortfolioFinanceDashboard() {
   };
   const onTrackShare = Math.round(statusCounts.onTrack / allProjects.length * 100);
   const watchShare = Math.round((statusCounts.onTrack + statusCounts.watch) / allProjects.length * 100);
-  const kpis = [
-    { label: "Approved portfolio", value: formatCurrency(portfolioTotals.approved), note: `${portfolioTotals.projects} projects · 7 thematic areas`, icon: Landmark },
-    { label: "Funds released", value: formatCurrency(portfolioTotals.released), note: `${releaseRate}% of approved budget`, icon: WalletCards },
-    { label: "Verified expenditure", value: formatCurrency(portfolioTotals.spent), note: `${utilization}% portfolio utilization`, icon: ReceiptIndianRupee },
-    { label: "Committed expenditure", value: formatCurrency(portfolioTotals.committed), note: "Approved POs and contracts", icon: FileCheck2 },
-    { label: "Available balance", value: formatCurrency(portfolioTotals.available), note: "After expenditure and commitments", icon: Banknote },
-    { label: "Pending advances", value: formatCurrency(portfolioTotals.pendingAdvances), note: "Awaiting settlement evidence", icon: Clock3 },
-    { label: "Projects requiring action", value: String(portfolioTotals.atRisk), note: "Finance response plans active", icon: AlertTriangle },
-    { label: "Compliance completeness", value: "94%", note: "Vouchers and supporting records", icon: ShieldCheck },
+  const dashboardGroups = [
+    {
+      title: "Available balance",
+      description: "Liquid reserves, investments and current obligations",
+      items: [
+        { label: "Total fixed deposits", value: "₹2.85 Cr", note: "Across 6 active deposits · 7.2% avg. yield", icon: Landmark },
+        { label: "Total mutual funds", value: "₹1.42 Cr", note: "Current market value · +8.4% YTD", icon: TrendingUp },
+        { label: "Total liabilities", value: formatCurrency(portfolioTotals.committed), note: "Approved payables and commitments", icon: Banknote },
+      ],
+    },
+    {
+      title: "Financial stats",
+      description: "Portfolio allocation and expenditure performance",
+      items: [
+        { label: "Approved portfolio", value: formatCurrency(portfolioTotals.approved), note: `${portfolioTotals.projects} projects · 7 thematic areas`, icon: Landmark },
+        { label: "Funds released", value: formatCurrency(portfolioTotals.released), note: `${releaseRate}% of approved budget`, icon: WalletCards },
+        { label: "Verified expenditure", value: formatCurrency(portfolioTotals.spent), note: `${utilization}% portfolio utilization`, icon: ReceiptIndianRupee },
+      ],
+    },
+    {
+      title: "Projects requiring action",
+      description: `${portfolioTotals.atRisk} projects currently need a finance response`,
+      items: [
+        { label: "Compliance completeness", value: "94%", note: "Vouchers and supporting records verified", icon: ShieldCheck },
+        { label: "Released", value: formatCurrency(portfolioTotals.released), note: `${releaseRate}% released across active projects`, icon: CheckCircle2 },
+        { label: "Corpus", value: "₹4.27 Cr", note: "Fixed deposits and mutual funds combined", icon: CircleDollarSign },
+      ],
+    },
   ];
 
   return <div className="space-y-6">
@@ -65,7 +84,7 @@ function PortfolioFinanceDashboard() {
       </div>
     </section>
 
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Finance portfolio KPIs">{kpis.map((item, index) => { const Icon = item.icon; return <motion.article key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .04 }} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><Icon size={18} /></span><p className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-3 text-[10px] text-[var(--text-subtle)]">{item.note}</p></motion.article>; })}</section>
+    {dashboardGroups.map((group, groupIndex) => <section key={group.title} aria-labelledby={`finance-group-${groupIndex}`}><div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-end"><div><h3 id={`finance-group-${groupIndex}`} className="text-base font-semibold text-[var(--text)]">{group.title}</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">{group.description}</p></div><span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Live portfolio view</span></div><div className="grid gap-4 md:grid-cols-3">{group.items.map((item, itemIndex) => { const Icon = item.icon; return <motion.article key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (groupIndex * 3 + itemIndex) * .04 }} className="group rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"><div className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><Icon size={18} /></span><span className="size-2 rounded-full bg-emerald-500/70" /></div><p className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">{item.note}</p></motion.article>; })}</div></section>)}
 
     <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
       <article className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Thematic expenditure profile</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Verified expenditure against approved allocation</p></div><div className="mt-7 space-y-5">{financeAreas.map((area) => { const totals = areaTotals(area); return <button key={area.id} type="button" onClick={() => navigate(`/finance/${area.id}`)} className="focus-ring group block w-full text-left"><div className="flex items-center justify-between gap-4 text-xs"><span className="flex items-center gap-2 font-medium text-[var(--text)]"><span className="size-2 rounded-full" style={{ background: area.color }} />{area.name}</span><span className="text-[var(--text-subtle)]">{formatCurrency(totals.spent)} / {formatCurrency(totals.approved)} <b className="ml-2 text-[var(--text)]">{totals.utilization}%</b></span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full transition-all group-hover:brightness-110" style={{ width: `${totals.utilization}%`, background: area.color }} /></div></button>; })}</div></article>

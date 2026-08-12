@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { Bell, Building2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, LayoutDashboard, LogOut, Menu, Moon, Search, ShoppingCart, Sun, WalletCards, X } from "lucide-react";
+import { BadgeIndianRupee, Bell, CheckCheck, ChevronLeft, ChevronRight, CircleDollarSign, LayoutDashboard, LogOut, Menu, Moon, Search, Sun, WalletCards, X } from "lucide-react";
 import { FinanceDashboard } from "../features/finance/FinanceDashboard";
 import { FinanceOperationsView, type FinanceOperationsSection } from "../features/finance/FinanceOperationsViews";
 import { financeAreas } from "../features/finance/data";
@@ -8,7 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { cn } from "../utils/cn";
 
-const operationsSections: FinanceOperationsSection[] = ["budgets", "approvals-center", "approvals-procurement"];
+const operationsSections: FinanceOperationsSection[] = ["budgets", "approvals", "payments"];
 
 export default function FinancePage() {
   const { areaId } = useParams();
@@ -17,7 +17,6 @@ export default function FinancePage() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [approvalsOpen, setApprovalsOpen] = useState(areaId?.startsWith("approvals-") ?? false);
 
   if (!user || user.moduleId !== "finance") return <Navigate to="/modules/core-operations" replace />;
   const isOperationsSection = operationsSections.includes(areaId as FinanceOperationsSection);
@@ -30,8 +29,8 @@ export default function FinancePage() {
   const pageTitle = activeArea
     ? `${activeArea.name} finances`
     : activeOperationsSection === "budgets" ? "Budgets"
-      : activeOperationsSection === "approvals-center" ? "Center approvals"
-        : activeOperationsSection === "approvals-procurement" ? "Procurement approvals" : "Overall finance dashboard";
+      : activeOperationsSection === "approvals" ? "Approvals"
+        : activeOperationsSection === "payments" ? "Payments" : "Overall finance dashboard";
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -45,13 +44,8 @@ export default function FinancePage() {
         <p className={cn("mb-3 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--text-subtle)]", collapsed && "sr-only")}>Finance workspace</p>
         <NavButton collapsed={collapsed} active={!activeArea && !activeOperationsSection} icon={<LayoutDashboard size={18} />} label="Overall finances" onClick={() => closeMobileAndNavigate("/finance/dashboard")} />
         <NavButton collapsed={collapsed} active={activeOperationsSection === "budgets"} icon={<WalletCards size={18} />} label="Budgets" onClick={() => closeMobileAndNavigate("/finance/budgets")} />
-        <div className="mt-1">
-          <button type="button" onClick={() => { if (collapsed) setCollapsed(false); setApprovalsOpen((value) => !value); }} className={cn("focus-ring flex h-11 w-full items-center rounded-xl text-sm transition-colors", collapsed ? "justify-center" : "gap-3 px-3", activeOperationsSection?.startsWith("approvals-") ? "bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")} aria-expanded={approvalsOpen}>
-            <CircleDollarSign size={18} />
-            {!collapsed && <><span className="flex-1 text-left">Approvals</span><ChevronDown size={14} className={cn("transition-transform", approvalsOpen && "rotate-180")} /></>}
-          </button>
-          {!collapsed && approvalsOpen && <div className="ml-5 mt-1 space-y-1 border-l border-[var(--border)] pl-3"><ApprovalNavButton active={activeOperationsSection === "approvals-center"} icon={<Building2 size={15} />} label="Center" onClick={() => closeMobileAndNavigate("/finance/approvals-center")} /><ApprovalNavButton active={activeOperationsSection === "approvals-procurement"} icon={<ShoppingCart size={15} />} label="Procurement" onClick={() => closeMobileAndNavigate("/finance/approvals-procurement")} /></div>}
-        </div>
+        <NavButton collapsed={collapsed} active={activeOperationsSection === "approvals"} icon={<CheckCheck size={18} />} label="Approvals" onClick={() => closeMobileAndNavigate("/finance/approvals")} />
+        <NavButton collapsed={collapsed} active={activeOperationsSection === "payments"} icon={<BadgeIndianRupee size={18} />} label="Payments" onClick={() => closeMobileAndNavigate("/finance/payments")} />
       </nav>
       {!collapsed && <div className="mx-3 mb-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3"><p className="truncate text-[10px] font-semibold text-[var(--text)]">{user.name}</p><p className="mt-1 text-[9px] text-emerald-600 dark:text-emerald-400">{user.roleLabel}</p></div>}
       <div className="border-t border-[var(--border)] p-3"><button type="button" onClick={signOut} className={cn("focus-ring flex h-11 w-full items-center rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--surface-soft)]", collapsed ? "justify-center" : "gap-3 px-3")}><LogOut size={18} />{!collapsed && "Sign out"}</button></div>
@@ -76,8 +70,4 @@ export default function FinancePage() {
 
 function NavButton({ collapsed, active, icon, label, onClick }: { collapsed: boolean; active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
   return <button type="button" onClick={onClick} title={collapsed ? label : undefined} className={cn("focus-ring flex h-11 w-full items-center rounded-xl text-sm transition-colors", collapsed ? "justify-center" : "gap-3 px-3", active ? "bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}>{icon}{!collapsed && label}</button>;
-}
-
-function ApprovalNavButton({ active, icon, label, onClick }: { active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={cn("focus-ring flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-xs transition-colors", active ? "bg-emerald-500/10 font-medium text-emerald-600 dark:text-emerald-400" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}>{icon}{label}</button>;
 }
