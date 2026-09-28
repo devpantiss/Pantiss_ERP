@@ -68,7 +68,7 @@ function readBudgetDrafts(): BudgetDraft[] {
   catch { return []; }
 }
 
-function BudgetsView() {
+export function BudgetsView() {
   const [selectedArea, setSelectedArea] = useState<FinanceArea | null>(null);
   const [selectedProject, setSelectedProject] = useState<FinanceProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -474,7 +474,7 @@ function TaDaReviewModal({ center, request, onClose }: { center: CenterApprovalP
   return <div className="zo-projects-backdrop fixed inset-0 z-[70] overflow-y-auto p-3 sm:p-6"><div className="zo-projects-surface mx-auto my-3 w-full max-w-7xl overflow-hidden"><div className="zo-projects-header flex items-start justify-between border-b border-[var(--border)] p-5 sm:p-6"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-600">TA/DA bill verification · {request.period}</p><h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Employee travel claims</h2><p className="mt-1 text-xs text-[var(--text-subtle)]">{center.projectName} · {center.centerName}</p></div><button type="button" onClick={onClose} className="focus-ring grid size-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text-muted)]" aria-label="Close TA/DA review"><X size={15} /></button></div><div className="grid gap-3 border-b border-[var(--border)] bg-[var(--module-bg)] p-5 sm:grid-cols-4 sm:p-6">{[{ label: "Employee bills", value: bills.length }, { label: "Claimed", value: formatCurrency(claimedTotal, true) }, { label: "Eligible after check", value: formatCurrency(eligibleTotal, true) }, { label: "Approved", value: bills.filter((bill) => bill.status === "Approved").length }].map((item) => <div key={item.label} className="rounded-xl bg-[var(--surface-soft)] p-4"><p className="text-[9px] text-[var(--text-subtle)]">{item.label}</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{item.value}</p></div>)}</div><div className="grid min-h-[560px] lg:grid-cols-[1.2fr_.8fr]"><div className="overflow-x-auto border-b border-[var(--border)] lg:border-b-0 lg:border-r"><table className="w-full min-w-[760px] text-left"><thead><tr className="bg-[var(--surface-soft)] text-[8px] uppercase tracking-wide text-[var(--text-subtle)]"><th className="px-5 py-4">Employee</th><th className="px-4 py-4">Travel</th><th className="px-4 py-4">Claimed</th><th className="px-4 py-4">Status</th><th className="px-5 py-4" /></tr></thead><tbody>{bills.map((bill) => <tr key={bill.id} className={cn("border-t border-[var(--border)]", bill.id === selectedBill?.id && "bg-violet-500/[0.05]")}><td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-violet-500/10 text-violet-600"><UserRound size={14} /></span><span><b className="block text-xs text-[var(--text)]">{bill.employee}</b><small className="mt-1 block text-[8px] text-[var(--text-subtle)]">{bill.employeeId} · {bill.designation}</small></span></div></td><td className="px-4 py-4"><p className="text-[10px] text-[var(--text)]">{bill.route}</p><p className="mt-1 text-[8px] text-[var(--text-subtle)]">{bill.travelDate}</p></td><td className="px-4 py-4"><p className="text-xs font-semibold text-[var(--text)]">{formatCurrency(bill.claimed, true)}</p><p className="mt-1 text-[8px] text-[var(--text-subtle)]">Eligible {formatCurrency(bill.eligible, true)}</p></td><td className="px-4 py-4"><span className={cn("rounded-full px-2 py-1 text-[8px] font-semibold", bill.status === "Approved" ? "bg-emerald-500/10 text-emerald-600" : bill.status === "Verified" ? "bg-blue-500/10 text-blue-600" : bill.status === "Query raised" ? "bg-amber-500/10 text-amber-600" : "bg-slate-500/10 text-[var(--text-muted)]")}>{bill.status}</span></td><td className="px-5 py-4"><button type="button" onClick={() => setSelectedBillId(bill.id)} className="focus-ring rounded-lg border border-[var(--border)] px-3 py-2 text-[9px] font-semibold text-[var(--text-muted)]">Review bills</button></td></tr>)}</tbody></table></div><aside className="bg-[var(--module-bg)] p-5 sm:p-6">{selectedBill ? <><div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-semibold uppercase tracking-wide text-violet-600">{selectedBill.id}</p><h3 className="mt-2 text-base font-semibold text-[var(--text)]">{selectedBill.employee}</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{selectedBill.purpose}</p></div><ReceiptText size={20} className="text-violet-600" /></div><div className="mt-5 grid grid-cols-2 gap-3">{[{ label: "Route", value: selectedBill.route }, { label: "Travel date", value: selectedBill.travelDate }, { label: "Claimed", value: formatCurrency(selectedBill.claimed, true) }, { label: "Eligible", value: formatCurrency(selectedBill.eligible, true) }].map((item) => <div key={item.label} className="rounded-xl bg-[var(--surface-soft)] p-3"><p className="text-[8px] text-[var(--text-subtle)]">{item.label}</p><p className="mt-1 text-[10px] font-semibold text-[var(--text)]">{item.value}</p></div>)}</div><div className="mt-6"><div className="flex items-center justify-between"><h4 className="text-xs font-semibold text-[var(--text)]">Uploaded bills</h4><span className="text-[8px] text-[var(--text-subtle)]">{selectedBill.documents.length} files</span></div><div className="mt-3 space-y-2">{selectedBill.documents.map((document) => <button key={document.name} type="button" className="focus-ring flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3 text-left hover:border-violet-500/30"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-red-500/10 text-red-500"><Paperclip size={14} /></span><span className="min-w-0 flex-1"><b className="block truncate text-[9px] text-[var(--text)]">{document.name}</b><small className="mt-1 block text-[8px] text-[var(--text-subtle)]">{document.kind} · {document.size}</small></span><Eye size={13} className="text-[var(--text-subtle)]" /></button>)}</div></div><div className="mt-6 rounded-xl border border-[var(--border)] p-4"><div className="flex items-center gap-2"><ShieldCheck size={15} className="text-emerald-600" /><p className="text-[10px] font-semibold text-[var(--text)]">ERP verification checklist</p></div><div className="mt-3 space-y-2 text-[9px] text-[var(--text-muted)]"><p>✓ Tour approval and travel dates matched</p><p>✓ Original bill copies attached</p><p>✓ Eligibility checked against TA/DA policy</p><p>✓ Duplicate claim check completed</p></div></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={() => updateStatus(selectedBill.id, "Query raised")} className="focus-ring h-10 rounded-xl border border-amber-500/30 text-[9px] font-semibold text-amber-600">Raise query</button>{selectedBill.status === "Verified" || selectedBill.status === "Approved" ? <button type="button" onClick={() => updateStatus(selectedBill.id, "Approved")} disabled={selectedBill.status === "Approved"} className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-[9px] font-semibold text-white disabled:opacity-60"><CheckCircle2 size={13} />{selectedBill.status === "Approved" ? "Approved" : "Approve bill"}</button> : <button type="button" onClick={() => updateStatus(selectedBill.id, "Verified")} className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 text-[9px] font-semibold text-white"><ShieldCheck size={13} />Verify bill</button>}</div></> : <div className="grid h-full place-items-center text-xs text-[var(--text-subtle)]">No employee bills for this month.</div>}</aside></div></div></div>;
 }
 
-type ProcurementStatus = "Quotation review" | "Approved" | "Payment initiated" | "Payment slip uploaded";
+type ProcurementStatus = "Quotation review" | "Approved" | "PO Created" | "PO Sent" | "Invoice Reminder Sent" | "Payment slip uploaded";
 
 interface ProcurementQuote {
   id: string;
@@ -494,7 +494,7 @@ interface ProcurementAuditEntry {
   detail: string;
 }
 
-type PaymentStatus = "Approved" | "Payment initiated" | "Payment slip uploaded";
+type PaymentStatus = "Approved" | "In progress" | "Payment slip uploaded";
 
 interface CenterPaymentRecord {
   id: string;
@@ -547,6 +547,10 @@ interface ProcurementRequest {
   status: ProcurementStatus;
   selectedQuoteId?: string;
   paymentSlip?: string;
+  purchaseOrderNo?: string;
+  poCreatedAt?: string;
+  poSentAt?: string;
+  invoiceReminderSentAt?: string;
   quotes: ProcurementQuote[];
   audit: ProcurementAuditEntry[];
 }
@@ -576,10 +580,24 @@ const initialProcurementRequests: ProcurementRequest[] = [
 
 const procurementStorageKey = "pantiss:finance-procurement-requests";
 
+const VALID_PROCUREMENT_STATUSES = new Set(["Quotation review", "Approved", "PO Created", "PO Sent", "Invoice Reminder Sent", "Payment slip uploaded"]);
+
+function migrateProcurementStatus(status: string): ProcurementStatus {
+  if (VALID_PROCUREMENT_STATUSES.has(status)) return status as ProcurementStatus;
+  // Legacy statuses written by buggy PaymentsView updateStatus — map back to nearest valid stage
+  if (status === "In progress" || status === "Payment initiated") return "Invoice Reminder Sent";
+  return "Quotation review";
+}
+
 function readProcurementRequests(): ProcurementRequest[] {
   try {
     const saved = JSON.parse(localStorage.getItem(procurementStorageKey) ?? "null") as ProcurementRequest[] | null;
-    return saved?.length ? saved.map((request) => ({ ...request, thematicArea: request.thematicArea ?? initialProcurementRequests.find((item) => item.id === request.id)?.thematicArea ?? "Other" })) : initialProcurementRequests;
+    if (!saved?.length) return initialProcurementRequests;
+    return saved.map((request) => ({
+      ...request,
+      status: migrateProcurementStatus(request.status as string),
+      thematicArea: request.thematicArea ?? initialProcurementRequests.find((item) => item.id === request.id)?.thematicArea ?? "Other",
+    }));
   } catch { return initialProcurementRequests; }
 }
 
@@ -600,7 +618,7 @@ interface UnifiedPaymentRecord {
   audit: ProcurementAuditEntry[];
 }
 
-function PaymentsView() {
+export function PaymentsView() {
   const [procurement, setProcurement] = useState(readProcurementRequests);
   const [centerPayments, setCenterPayments] = useState(readCenterPayments);
   const [projectFilter, setProjectFilter] = useState("All projects");
@@ -613,7 +631,8 @@ function PaymentsView() {
 
   const procurementPayments: UnifiedPaymentRecord[] = procurement.filter((request) => request.status !== "Quotation review").map((request) => {
     const quote = request.quotes.find((item) => item.id === request.selectedQuoteId);
-    return { id: request.id, source: "Procurement", title: request.title, project: request.project, center: "Central Procurement", amount: quote?.amount ?? request.budgetCeiling, status: request.status as PaymentStatus, paymentSlip: request.paymentSlip, payee: quote?.vendor ?? "Approved vendor", audit: request.audit };
+    const payStatus: PaymentStatus = request.status === "Payment slip uploaded" ? "Payment slip uploaded" : request.status === "Approved" ? "Approved" : "In progress";
+    return { id: request.id, source: "Procurement", title: request.title, project: request.project, center: "Central Procurement", amount: quote?.amount ?? request.budgetCeiling, status: payStatus, paymentSlip: request.paymentSlip, payee: quote?.vendor ?? "Approved vendor", audit: request.audit };
   });
   const centerRecords: UnifiedPaymentRecord[] = centerPayments.map((record) => ({ ...record, source: "Center", payee: record.center }));
   const records = [...procurementPayments, ...centerRecords];
@@ -623,16 +642,16 @@ function PaymentsView() {
   const visible = records.filter((record) => (projectFilter === "All projects" || record.project === projectFilter) && (centerFilter === "All centers" || record.center === centerFilter) && (statusFilter === "All" || record.status === statusFilter) && (sourceFilter === "All" || record.source === sourceFilter) && (!normalizedQuery || [record.id, record.title, record.project, record.center, record.payee].some((value) => value.toLowerCase().includes(normalizedQuery))));
   const totalValue = records.reduce((sum, record) => sum + record.amount, 0);
   const pendingValue = records.filter((record) => record.status === "Approved").reduce((sum, record) => sum + record.amount, 0);
-  const processingValue = records.filter((record) => record.status === "Payment initiated").reduce((sum, record) => sum + record.amount, 0);
+  const processingValue = records.filter((record) => record.status === "In progress").reduce((sum, record) => sum + record.amount, 0);
   const completedValue = records.filter((record) => record.status === "Payment slip uploaded").reduce((sum, record) => sum + record.amount, 0);
 
   useEffect(() => { localStorage.setItem(procurementStorageKey, JSON.stringify(procurement)); }, [procurement]);
   useEffect(() => { localStorage.setItem(centerPaymentsStorageKey, JSON.stringify(centerPayments)); }, [centerPayments]);
 
   const updateStatus = (record: UnifiedPaymentRecord, status: PaymentStatus, detail: string, file?: File) => {
-    const action = status === "Payment initiated" ? "Payment initiated" : "Payment slip uploaded";
+    const action = status === "In progress" ? "Payment initiated" : "Payment slip uploaded";
     const entry = { action, actor: "Accounts Executive", date: procurementStamp(), detail };
-    if (record.source === "Procurement") setProcurement((current) => current.map((request) => request.id === record.id ? { ...request, status, paymentSlip: file?.name ?? request.paymentSlip, audit: [...request.audit, entry] } : request));
+    if (record.source === "Procurement") setProcurement((current) => current.map((request) => request.id === record.id ? { ...request, status: status === "Payment slip uploaded" ? "Payment slip uploaded" : request.status, paymentSlip: file?.name ?? request.paymentSlip, audit: [...request.audit, entry] } : request));
     else setCenterPayments((current) => current.map((item) => item.id === record.id ? { ...item, status, paymentSlip: file?.name ?? item.paymentSlip, audit: [...item.audit, entry] } : item));
     setAuditRecord((current) => current?.id === record.id ? { ...current, status, paymentSlip: file?.name ?? current.paymentSlip, audit: [...current.audit, entry] } : current);
   };
@@ -646,16 +665,16 @@ function PaymentsView() {
   const stats = [
     { label: "Approved payment value", value: formatCurrency(totalValue, true), note: `${records.length} approved requests`, icon: CircleDollarSign, color: "text-emerald-600 bg-emerald-500/10" },
     { label: "Ready to pay", value: formatCurrency(pendingValue, true), note: `${records.filter((record) => record.status === "Approved").length} waiting`, icon: Clock3, color: "text-amber-600 bg-amber-500/10" },
-    { label: "Processing", value: formatCurrency(processingValue, true), note: `${records.filter((record) => record.status === "Payment initiated").length} in progress`, icon: CreditCard, color: "text-teal-600 bg-teal-500/10" },
+    { label: "Processing", value: formatCurrency(processingValue, true), note: `${records.filter((record) => record.status === "In progress").length} in progress`, icon: CreditCard, color: "text-teal-600 bg-teal-500/10" },
     { label: "Evidence complete", value: formatCurrency(completedValue, true), note: `${records.filter((record) => record.status === "Payment slip uploaded").length} reconciled`, icon: ShieldCheck, color: "text-emerald-600 bg-emerald-500/10" },
   ];
 
   return <div className="space-y-6">
     <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-[0_28px_80px_rgba(5,150,105,.18)] sm:p-8"><div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" /><div className="absolute right-24 top-12 size-36 rounded-full bg-emerald-300/10 blur-3xl" /><div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-end"><div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]"><Banknote size={13} />Finance payment desk</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Approved. Paid. Accounted for.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Process approved disbursements, capture payment evidence and review an immutable activity history for every center and procurement transaction.</p></div><div className="w-full max-w-sm rounded-2xl border border-white/15 bg-white/[0.08] p-4 backdrop-blur"><div className="flex items-center justify-between"><span className="text-[10px] text-white/60">Evidence completion</span><b className="text-xl">{records.length ? Math.round(records.filter((record) => record.status === "Payment slip uploaded").length / records.length * 100) : 0}%</b></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-300" style={{ width: `${records.length ? records.filter((record) => record.status === "Payment slip uploaded").length / records.length * 100 : 0}%` }} /></div><p className="mt-3 text-[9px] text-white/50">Payment proof attached and ready for reconciliation</p></div></div></section>
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><div className="flex items-start justify-between"><span className={cn("grid size-10 place-items-center rounded-xl", item.color)}><Icon size={17} /></span><span className="size-2 rounded-full bg-emerald-500/60" /></div><p className="mt-5 text-xl font-semibold tracking-[-0.035em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-2 text-[9px] text-[var(--text-subtle)]">{item.note}</p></article>; })}</section>
-    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600"><SlidersHorizontal size={16} /></span><div><h3 className="text-sm font-semibold text-[var(--text)]">Payment queue</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{visible.length} of {records.length} transactions shown</p></div></div><label className="relative block w-full lg:max-w-sm"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ID, payee, project or center" className="focus-ring h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] pl-9 pr-3 text-xs text-[var(--text)] outline-none" /></label></div><div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><select value={projectFilter} onChange={(event) => { setProjectFilter(event.target.value); setCenterFilter("All centers"); }} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]">{projects.map((project) => <option key={project}>{project}</option>)}</select><select value={centerFilter} onChange={(event) => setCenterFilter(event.target.value)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]">{centers.map((center) => <option key={center}>{center}</option>)}</select><select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as typeof sourceFilter)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]"><option>All</option><option>Center</option><option>Procurement</option></select><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]"><option>All</option><option>Approved</option><option>Payment initiated</option><option>Payment slip uploaded</option></select></div></section>
-    <section className="grid gap-4 xl:grid-cols-2">{visible.map((record) => { const stage = record.status === "Approved" ? 1 : record.status === "Payment initiated" ? 2 : 3; return <article key={`${record.source}-${record.id}`} className="overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><div className="flex flex-wrap gap-2"><span className={cn("rounded-full px-2.5 py-1 text-[8px] font-semibold", record.status === "Approved" ? "bg-amber-500/10 text-amber-600" : record.status === "Payment initiated" ? "bg-emerald-500/10 text-emerald-600" : "bg-emerald-500/10 text-emerald-600")}>{record.status === "Payment slip uploaded" ? "Paid · evidence attached" : record.status}</span><span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[8px] font-semibold text-emerald-600">{record.source}</span></div><h3 className="mt-4 truncate text-sm font-semibold text-[var(--text)]">{record.title}</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{record.id} · {record.project}</p></div><span className="shrink-0 text-right"><b className="block text-lg text-[var(--text)]">{formatCurrency(record.amount, true)}</b><small className="text-[8px] text-[var(--text-subtle)]">Approved value</small></span></div><div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-[var(--surface-soft)] p-4"><span><small className="block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">Payee</small><b className="mt-1 block truncate text-[10px] text-[var(--text)]">{record.payee}</b></span><span><small className="block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">Cost center</small><b className="mt-1 block truncate text-[10px] text-[var(--text)]">{record.center}</b></span></div><div className="mt-5"><div className="flex items-center"><span className="size-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10" /><span className={cn("h-px flex-1", stage >= 2 ? "bg-emerald-500" : "bg-[var(--border)]")} /><span className={cn("size-2.5 rounded-full ring-4", stage >= 2 ? "bg-emerald-500 ring-emerald-500/10" : "bg-[var(--border)] ring-transparent")} /><span className={cn("h-px flex-1", stage >= 3 ? "bg-emerald-500" : "bg-[var(--border)]")} /><span className={cn("size-2.5 rounded-full ring-4", stage >= 3 ? "bg-emerald-500 ring-emerald-500/10" : "bg-[var(--border)] ring-transparent")} /></div><div className="mt-2 flex justify-between text-[8px] text-[var(--text-subtle)]"><span>Approved</span><span>Payment</span><span>Evidence</span></div></div>{record.status === "Approved" ? <button type="button" onClick={() => setPaymentRecord(record)} className="focus-ring mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-[10px] font-semibold text-white shadow-lg shadow-emerald-600/15 hover:bg-emerald-700"><CreditCard size={14} />Proceed to payment</button> : <label className={cn("focus-ring mt-5 flex items-center gap-4 rounded-xl border p-4", record.paymentSlip ? "border-emerald-500/25 bg-emerald-500/[0.05]" : "cursor-pointer border-dashed border-emerald-500/35 bg-emerald-500/[0.04]")}><span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", record.paymentSlip ? "bg-emerald-500/10 text-emerald-600" : "bg-emerald-500/10 text-emerald-600")}>{record.paymentSlip ? <CheckCircle2 size={17} /> : <Upload size={16} />}</span><span className="min-w-0 flex-1"><b className="block truncate text-[10px] text-[var(--text)]">{record.paymentSlip ?? "Upload payment slip"}</b><small className="mt-1 block text-[8px] text-[var(--text-subtle)]">{record.paymentSlip ? "Evidence secured in the audit record · Click to replace" : "PDF, JPG or PNG · Maximum 10 MB"}</small></span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only" onChange={(event) => upload(record, event.target.files?.[0])} /></label>}</div><button type="button" onClick={() => setAuditRecord(record)} className="focus-ring flex w-full items-center justify-between border-t border-[var(--border)] bg-[var(--surface-soft)] px-5 py-4 text-left transition hover:bg-emerald-500/[0.05] sm:px-6"><span><span className="flex items-center gap-2 text-[10px] font-semibold text-[var(--text)]"><History size={14} className="text-emerald-600" />View complete audit trail</span><span className="mt-1 block text-[8px] text-[var(--text-subtle)]">{record.audit.length} recorded events · Latest: {record.audit.at(-1)?.action}</span></span><ChevronRight size={14} className="text-[var(--text-subtle)]" /></button></article>; })}{visible.length === 0 && <div className="col-span-full rounded-[22px] border border-dashed border-[var(--border)] bg-[var(--module-bg)] p-12 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-subtle)]"><Search size={18} /></span><p className="mt-4 text-xs font-semibold text-[var(--text)]">No matching payments</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">Change or clear the current filters to see more transactions.</p><button type="button" onClick={clearFilters} className="focus-ring mt-4 rounded-xl bg-emerald-600 px-4 py-2.5 text-[9px] font-semibold text-white">Clear filters</button></div>}</section>
-    {paymentRecord && <PaymentProcessOverlay record={paymentRecord} onClose={() => setPaymentRecord(null)} onConfirm={(detail) => { updateStatus(paymentRecord, "Payment initiated", detail); setPaymentRecord(null); }} />}
+    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600"><SlidersHorizontal size={16} /></span><div><h3 className="text-sm font-semibold text-[var(--text)]">Payment queue</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{visible.length} of {records.length} transactions shown</p></div></div><label className="relative block w-full lg:max-w-sm"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ID, payee, project or center" className="focus-ring h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] pl-9 pr-3 text-xs text-[var(--text)] outline-none" /></label></div><div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><select value={projectFilter} onChange={(event) => { setProjectFilter(event.target.value); setCenterFilter("All centers"); }} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]">{projects.map((project) => <option key={project}>{project}</option>)}</select><select value={centerFilter} onChange={(event) => setCenterFilter(event.target.value)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]">{centers.map((center) => <option key={center}>{center}</option>)}</select><select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as typeof sourceFilter)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]"><option>All</option><option>Center</option><option>Procurement</option></select><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] text-[var(--text)]"><option>All</option><option>Approved</option><option>In progress</option><option>Payment slip uploaded</option></select></div></section>
+    <section className="grid gap-4 xl:grid-cols-2">{visible.map((record) => { const stage = record.status === "Approved" ? 1 : record.status === "In progress" ? 2 : 3; return <article key={`${record.source}-${record.id}`} className="overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><div className="flex flex-wrap gap-2"><span className={cn("rounded-full px-2.5 py-1 text-[8px] font-semibold", record.status === "Approved" ? "bg-amber-500/10 text-amber-600" : record.status === "In progress" ? "bg-teal-500/10 text-teal-600" : "bg-emerald-500/10 text-emerald-600")}>{record.status === "Payment slip uploaded" ? "Paid · evidence attached" : record.status}</span><span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[8px] font-semibold text-emerald-600">{record.source}</span></div><h3 className="mt-4 truncate text-sm font-semibold text-[var(--text)]">{record.title}</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{record.id} · {record.project}</p></div><span className="shrink-0 text-right"><b className="block text-lg text-[var(--text)]">{formatCurrency(record.amount, true)}</b><small className="text-[8px] text-[var(--text-subtle)]">Approved value</small></span></div><div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-[var(--surface-soft)] p-4"><span><small className="block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">Payee</small><b className="mt-1 block truncate text-[10px] text-[var(--text)]">{record.payee}</b></span><span><small className="block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">Cost center</small><b className="mt-1 block truncate text-[10px] text-[var(--text)]">{record.center}</b></span></div><div className="mt-5"><div className="flex items-center"><span className="size-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10" /><span className={cn("h-px flex-1", stage >= 2 ? "bg-emerald-500" : "bg-[var(--border)]")} /><span className={cn("size-2.5 rounded-full ring-4", stage >= 2 ? "bg-emerald-500 ring-emerald-500/10" : "bg-[var(--border)] ring-transparent")} /><span className={cn("h-px flex-1", stage >= 3 ? "bg-emerald-500" : "bg-[var(--border)]")} /><span className={cn("size-2.5 rounded-full ring-4", stage >= 3 ? "bg-emerald-500 ring-emerald-500/10" : "bg-[var(--border)] ring-transparent")} /></div><div className="mt-2 flex justify-between text-[8px] text-[var(--text-subtle)]"><span>Approved</span><span>Payment</span><span>Evidence</span></div></div>{record.status === "Approved" ? <button type="button" onClick={() => setPaymentRecord(record)} className="focus-ring mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-[10px] font-semibold text-white shadow-lg shadow-emerald-600/15 hover:bg-emerald-700"><CreditCard size={14} />Proceed to payment</button> : <label className={cn("focus-ring mt-5 flex items-center gap-4 rounded-xl border p-4", record.paymentSlip ? "border-emerald-500/25 bg-emerald-500/[0.05]" : "cursor-pointer border-dashed border-emerald-500/35 bg-emerald-500/[0.04]")}><span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", record.paymentSlip ? "bg-emerald-500/10 text-emerald-600" : "bg-emerald-500/10 text-emerald-600")}>{record.paymentSlip ? <CheckCircle2 size={17} /> : <Upload size={16} />}</span><span className="min-w-0 flex-1"><b className="block truncate text-[10px] text-[var(--text)]">{record.paymentSlip ?? "Upload payment slip"}</b><small className="mt-1 block text-[8px] text-[var(--text-subtle)]">{record.paymentSlip ? "Evidence secured in the audit record · Click to replace" : "PDF, JPG or PNG · Maximum 10 MB"}</small></span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only" onChange={(event) => upload(record, event.target.files?.[0])} /></label>}</div><button type="button" onClick={() => setAuditRecord(record)} className="focus-ring flex w-full items-center justify-between border-t border-[var(--border)] bg-[var(--surface-soft)] px-5 py-4 text-left transition hover:bg-emerald-500/[0.05] sm:px-6"><span><span className="flex items-center gap-2 text-[10px] font-semibold text-[var(--text)]"><History size={14} className="text-emerald-600" />View complete audit trail</span><span className="mt-1 block text-[8px] text-[var(--text-subtle)]">{record.audit.length} recorded events · Latest: {record.audit.at(-1)?.action}</span></span><ChevronRight size={14} className="text-[var(--text-subtle)]" /></button></article>; })}{visible.length === 0 && <div className="col-span-full rounded-[22px] border border-dashed border-[var(--border)] bg-[var(--module-bg)] p-12 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-subtle)]"><Search size={18} /></span><p className="mt-4 text-xs font-semibold text-[var(--text)]">No matching payments</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">Change or clear the current filters to see more transactions.</p><button type="button" onClick={clearFilters} className="focus-ring mt-4 rounded-xl bg-emerald-600 px-4 py-2.5 text-[9px] font-semibold text-white">Clear filters</button></div>}</section>
+    {paymentRecord && <PaymentProcessOverlay record={paymentRecord} onClose={() => setPaymentRecord(null)} onConfirm={(detail) => { updateStatus(paymentRecord, "In progress", detail); setPaymentRecord(null); }} />}
     {auditRecord && <PaymentAuditOverlay record={auditRecord} onClose={() => setAuditRecord(null)} />}
   </div>;
 }
@@ -674,24 +693,245 @@ function PaymentAuditOverlay({ record, onClose }: { record: UnifiedPaymentRecord
   return <Overlay open onClose={onClose} variant="panel" size="xl" zIndex={75} label="Transaction audit trail" title={record.title} description={`${record.id} · ${record.project}`} footer={<><div className="flex items-center gap-2 text-[9px] text-[var(--text-subtle)]"><ShieldCheck size={13} className="text-emerald-600" />Read-only system record · {record.audit.length} events</div><button type="button" onClick={onClose} className="focus-ring h-10 rounded-xl bg-[var(--brand-primary)] px-4 text-[10px] font-semibold text-white">Close audit trail</button></>}><div className="border-b border-[var(--border)] bg-[var(--surface-soft)] p-5 sm:p-6"><div className="grid gap-3 sm:grid-cols-4">{[{ label: "Payment status", value: record.status }, { label: "Approved amount", value: formatCurrency(record.amount, true) }, { label: "Payee", value: record.payee }, { label: "Source", value: record.source }].map((item) => <div key={item.label} className="rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-4"><p className="text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">{item.label}</p><p className="mt-2 truncate text-xs font-semibold text-[var(--text)]">{item.value}</p></div>)}</div></div><div className="p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600"><History size={18} /></span><div><h3 className="text-sm font-semibold text-[var(--text)]">Lifecycle history</h3><p className="mt-1 text-[9px] text-[var(--text-subtle)]">Chronological record from submission through payment evidence.</p></div></div><span className="rounded-full border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-1.5 text-[8px] font-semibold text-emerald-600">Integrity protected</span></div><div className="relative mt-7 space-y-4 pl-7 before:absolute before:bottom-4 before:left-[7px] before:top-4 before:w-px before:bg-[var(--border)]">{record.audit.map((entry, index) => { const latest = index === record.audit.length - 1; return <article key={`${entry.action}-${index}`} className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 before:absolute before:-left-[27px] before:top-5 before:size-3.5 before:rounded-full before:border-[3px] before:border-[var(--module-bg)] before:bg-emerald-500"><div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start"><div><div className="flex items-center gap-2"><h4 className="text-[10px] font-semibold text-[var(--text)]">{entry.action}</h4>{latest && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[7px] font-semibold uppercase tracking-wide text-emerald-600">Latest</span>}</div><p className="mt-1 text-[9px] font-medium text-[var(--text-muted)]">{entry.actor}</p></div><time className="shrink-0 rounded-lg bg-[var(--module-bg)] px-2.5 py-1.5 text-[8px] text-[var(--text-subtle)]">{entry.date}</time></div><p className="mt-3 border-t border-[var(--border)] pt-3 text-[9px] leading-5 text-[var(--text-muted)]">{entry.detail}</p></article>; })}</div>{record.paymentSlip && <div className="mt-6 flex items-center gap-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] p-4"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600"><ReceiptText size={16} /></span><span className="min-w-0 flex-1"><b className="block truncate text-[10px] text-[var(--text)]">{record.paymentSlip}</b><small className="mt-1 block text-[8px] text-[var(--text-subtle)]">Final payment evidence attached to this audit record</small></span><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[8px] font-semibold text-emerald-600">Verified</span></div>}</div></Overlay>;
 }
 
-function ProcurementApprovalsView() {
+export function ProcurementApprovalsView() {
   const [requests, setRequests] = useState(readProcurementRequests);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"All" | ProcurementStatus>("All");
-  const [areaFilter, setAreaFilter] = useState("All thematic areas");
-  const [projectFilter, setProjectFilter] = useState("All projects");
   const [paymentWorkspace, setPaymentWorkspace] = useState(false);
-  const selected = requests.find((request) => request.id === selectedId) ?? null;
-  const thematicAreas = ["All thematic areas", ...new Set(requests.map((request) => request.thematicArea))];
-  const availableProjects = ["All projects", ...new Set(requests.filter((request) => areaFilter === "All thematic areas" || request.thematicArea === areaFilter).map((request) => request.project))];
-  const visible = requests.filter((request) => (statusFilter === "All" || request.status === statusFilter) && (areaFilter === "All thematic areas" || request.thematicArea === areaFilter) && (projectFilter === "All projects" || request.project === projectFilter));
-  const selectedValue = requests.reduce((sum, request) => sum + (request.quotes.find((quote) => quote.id === request.selectedQuoteId)?.amount ?? request.budgetCeiling), 0);
-  const updateRequest = (updated: ProcurementRequest) => setRequests((current) => current.map((request) => request.id === updated.id ? updated : request));
+  const selected = requests.find((r) => r.id === selectedId) ?? null;
+
+  const updateRequest = (updated: ProcurementRequest) =>
+    setRequests((curr) => curr.map((r) => (r.id === updated.id ? updated : r)));
+
   useEffect(() => { localStorage.setItem(procurementStorageKey, JSON.stringify(requests)); }, [requests]);
 
-  if (paymentWorkspace) return <ProcurementPaymentWorkspace requests={requests} areaFilter={areaFilter} projectFilter={projectFilter} onAreaFilter={(value) => { setAreaFilter(value); setProjectFilter("All projects"); }} onProjectFilter={setProjectFilter} onUpdate={updateRequest} onBack={() => setPaymentWorkspace(false)} />;
+  const createPO = (req: ProcurementRequest) => {
+    const poNo = `PO-${req.id.replace("PR-", "")}-${Math.floor(Math.random() * 900 + 100)}`;
+    updateRequest({ ...req, status: "PO Created", purchaseOrderNo: poNo, poCreatedAt: procurementStamp(),
+      audit: [...req.audit, { action: "Purchase order created", actor: "Finance Manager", date: procurementStamp(), detail: `PO ${poNo} generated for ${req.quotes.find(q => q.id === req.selectedQuoteId)?.vendor ?? "selected vendor"}.` }] });
+  };
 
-  return <div className="space-y-6"><section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white sm:p-8"><div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" /><div className="relative"><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]"><ShoppingCart size={13} />Procurement approvals</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.045em]">Quotation-based procurement</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Compare three vendor quotations, select the best-value offer and approve the request. Payment evidence is handled separately when payment is processed.</p><div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center"><select value={areaFilter} onChange={(event) => { setAreaFilter(event.target.value); setProjectFilter("All projects"); }} className="focus-ring h-10 rounded-md border border-white/15 bg-white/10 px-3 text-[10px] font-semibold text-white"><option className="text-slate-900">All thematic areas</option>{thematicAreas.slice(1).map((area) => <option key={area} className="text-slate-900">{area}</option>)}</select><select value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} className="focus-ring h-10 rounded-md border border-white/15 bg-white/10 px-3 text-[10px] font-semibold text-white"><option className="text-slate-900">All projects</option>{availableProjects.slice(1).map((project) => <option key={project} className="text-slate-900">{project}</option>)}</select><button type="button" onClick={() => setPaymentWorkspace(true)} className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-md bg-white px-4 text-[10px] font-semibold text-emerald-800"><Upload size={14} />Payment slips · {requests.filter((request) => request.status !== "Quotation review").length}</button></div></div></section><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[{ label: "Total requests", value: requests.length }, { label: "Awaiting quote review", value: requests.filter((request) => request.status === "Quotation review").length }, { label: "Approved / paid", value: requests.filter((request) => request.status !== "Quotation review").length }, { label: "Portfolio request value", value: formatCurrency(selectedValue, true) }].map((item) => <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><p className="text-2xl font-semibold text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs text-[var(--text-muted)]">{item.label}</p></article>)}</section><section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="flex flex-col justify-between gap-4 border-b border-[var(--border)] p-5 sm:flex-row sm:items-end sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Procurement request register</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Every request includes exactly three comparable quotations.</p></div><div className="flex flex-wrap gap-2">{(["All", "Quotation review", "Approved", "Payment slip uploaded"] as const).map((status) => <button key={status} type="button" onClick={() => setStatusFilter(status)} className={cn("focus-ring h-9 rounded-lg px-3 text-[9px] font-semibold", statusFilter === status ? "bg-emerald-600 text-white" : "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-muted)]")}>{status}</button>)}</div></div><div className="divide-y divide-[var(--border)]">{visible.map((request) => { const selectedQuote = request.quotes.find((quote) => quote.id === request.selectedQuoteId); return <article key={request.id} className="flex flex-col gap-4 p-5 hover:bg-[var(--surface-soft)] sm:flex-row sm:items-center sm:justify-between sm:px-6"><div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600"><ShoppingCart size={18} /></span><div><div className="flex flex-wrap items-center gap-2"><h4 className="text-xs font-semibold text-[var(--text)]">{request.title}</h4><span className={cn("rounded-full px-2 py-1 text-[8px] font-semibold", request.status === "Quotation review" ? "bg-blue-500/10 text-blue-600" : request.status === "Approved" ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600")}>{request.status}</span>{request.priority === "High" && <span className="rounded-full bg-red-500/10 px-2 py-1 text-[8px] font-semibold text-red-500">High priority</span>}</div><p className="mt-1 text-[10px] text-[var(--text-subtle)]">{request.id} · {request.project} · Requested by {request.requestedBy}</p><p className="mt-2 text-[9px] text-[var(--text-muted)]">3 quotations · {request.quantity} · Submitted {request.submitted}</p></div></div><div className="flex items-center justify-between gap-5 sm:justify-end"><span className="text-right"><b className="block text-sm text-[var(--text)]">{formatCurrency(selectedQuote?.amount ?? request.budgetCeiling, true)}</b><small className="text-[8px] text-[var(--text-subtle)]">{selectedQuote ? "Selected value" : "Budget ceiling"}</small></span><button type="button" onClick={() => setSelectedId(request.id)} className="focus-ring rounded-xl bg-emerald-600 px-4 py-2.5 text-[10px] font-semibold text-white hover:bg-emerald-700">Review request</button></div></article>; })}</div></section>{selected && <ProcurementReviewOverlay request={selected} onUpdate={updateRequest} onClose={() => setSelectedId(null)} />}</div>;
+  const sendPO = (req: ProcurementRequest) => {
+    updateRequest({ ...req, status: "PO Sent", poSentAt: procurementStamp(),
+      audit: [...req.audit, { action: "Purchase order sent", actor: "Finance Manager", date: procurementStamp(), detail: `${req.purchaseOrderNo} dispatched to vendor via email. Delivery expected within ${req.quotes.find(q => q.id === req.selectedQuoteId)?.deliveryDays ?? "—"} days.` }] });
+  };
+
+  const sendInvoiceReminder = (req: ProcurementRequest) => {
+    updateRequest({ ...req, status: "Invoice Reminder Sent", invoiceReminderSentAt: procurementStamp(),
+      audit: [...req.audit, { action: "Invoice reminder sent", actor: "Accounts Executive", date: procurementStamp(), detail: `Payment reminder sent to ${req.quotes.find(q => q.id === req.selectedQuoteId)?.vendor ?? "vendor"}. Invoice and payment expected.` }] });
+  };
+
+  if (paymentWorkspace) return <ProcurementPaymentWorkspace requests={requests} areaFilter="All thematic areas" projectFilter="All projects" onAreaFilter={() => {}} onProjectFilter={() => {}} onUpdate={updateRequest} onBack={() => setPaymentWorkspace(false)} />;
+
+  const PIPELINE_STAGES: { label: string; status: ProcurementStatus | "All" }[] = [
+    { label: "All",                    status: "All" },
+    { label: "Quotation Review",       status: "Quotation review" },
+    { label: "Approved",               status: "Approved" },
+    { label: "PO Created",             status: "PO Created" },
+    { label: "PO Sent",                status: "PO Sent" },
+    { label: "Invoice Reminder Sent",  status: "Invoice Reminder Sent" },
+    { label: "Payment Uploaded",       status: "Payment slip uploaded" },
+  ];
+
+  const stageCounts = PIPELINE_STAGES.reduce<Record<string, number>>((acc, s) => {
+    acc[s.status] = s.status === "All" ? requests.length : requests.filter(r => r.status === s.status).length;
+    return acc;
+  }, {});
+
+  const visible = requests.filter(r => statusFilter === "All" || r.status === statusFilter);
+
+  const statusConfig: Record<ProcurementStatus, { label: string; pill: string; step: number }> = {
+    "Quotation review":        { label: "Quotation Review",       pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400",      step: 1 },
+    "Approved":                { label: "Approved",               pill: "bg-amber-500/10 text-amber-600 dark:text-amber-400",    step: 2 },
+    "PO Created":              { label: "PO Created",             pill: "bg-violet-500/10 text-violet-600 dark:text-violet-400", step: 3 },
+    "PO Sent":                 { label: "PO Sent",                pill: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",       step: 4 },
+    "Invoice Reminder Sent":   { label: "Invoice Reminder Sent",  pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400", step: 5 },
+    "Payment slip uploaded":   { label: "Payment Uploaded",       pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", step: 6 },
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-xl sm:p-8">
+        <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
+        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]">
+              <ShoppingCart size={13} /> Procurement
+            </span>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Procurement pipeline</h2>
+            <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
+              Full lifecycle — from quotation review and approval through purchase order creation, dispatch, invoice follow-up, and payment.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { label: "Total requests",  value: requests.length },
+              { label: "Awaiting review", value: requests.filter(r => r.status === "Quotation review").length },
+              { label: "In progress",     value: requests.filter(r => !["Quotation review", "Payment slip uploaded"].includes(r.status)).length },
+              { label: "Completed",       value: requests.filter(r => r.status === "Payment slip uploaded").length },
+            ].map(item => (
+              <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center backdrop-blur">
+                <span className="block text-xl font-bold">{item.value}</span>
+                <span className="mt-0.5 block text-[9px] text-white/65">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pipeline stepper strip */}
+      <section className="overflow-x-auto rounded-[20px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]">
+        <div className="flex min-w-max items-stretch divide-x divide-[var(--border)]">
+          {PIPELINE_STAGES.slice(1).map((stage, idx) => {
+            const count = stageCounts[stage.status];
+            const active = statusFilter === stage.status;
+            return (
+              <button
+                key={stage.status}
+                type="button"
+                onClick={() => setStatusFilter(stage.status as ProcurementStatus)}
+                className={cn(
+                  "flex min-w-[130px] flex-col items-center gap-1 px-4 py-4 text-center text-[10px] font-semibold transition hover:bg-[var(--surface-soft)]",
+                  active ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "text-[var(--text-muted)]"
+                )}
+              >
+                <span className={cn("mb-1 grid size-6 place-items-center rounded-full text-[9px] font-bold",
+                  active ? "bg-emerald-600 text-white" : "bg-[var(--border)] text-[var(--text-muted)]"
+                )}>{idx + 1}</span>
+                {stage.label}
+                <span className={cn("rounded-full px-2 py-0.5 text-[8px]",
+                  count > 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-[var(--border)] text-[var(--text-muted)]"
+                )}>{count}</span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setPaymentWorkspace(true)}
+            className="flex min-w-[130px] flex-col items-center gap-1 bg-blue-500/5 px-4 py-4 text-center text-[10px] font-semibold text-blue-600 transition hover:bg-blue-500/10 dark:text-blue-400"
+          >
+            <span className="mb-1 grid size-6 place-items-center rounded-full bg-blue-600 text-[9px] font-bold text-white">↗</span>
+            Payments<span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[8px]">{requests.filter(r => r.status !== "Quotation review").length}</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
+          <button type="button" onClick={() => setStatusFilter("All")}
+            className={cn("focus-ring h-8 rounded-lg px-3 text-[9px] font-semibold transition",
+              statusFilter === "All" ? "bg-emerald-600 text-white" : "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-muted)] hover:text-[var(--text)]")}>
+            All ({requests.length})
+          </button>
+        </div>
+        <span className="text-[10px] text-[var(--text-subtle)]">
+          {visible.length} request{visible.length !== 1 ? "s" : ""} shown
+        </span>
+      </div>
+
+      {/* Request list */}
+      <section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]">
+        <div className="border-b border-[var(--border)] px-5 py-4 sm:px-6">
+          <h3 className="text-base font-semibold text-[var(--text)]">Procurement request register</h3>
+          <p className="mt-1 text-xs text-[var(--text-subtle)]">Click any request to review quotations and progress it through the procurement pipeline.</p>
+        </div>
+        <div className="divide-y divide-[var(--border)]">
+          {visible.map((req) => {
+            const selectedQuote = req.quotes.find(q => q.id === req.selectedQuoteId);
+            const cfg = statusConfig[req.status] ?? { label: req.status, pill: "bg-gray-500/10 text-gray-500", step: 0 };
+            return (
+              <article key={req.id} className="flex flex-col gap-4 p-5 hover:bg-[var(--surface-soft)] sm:px-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  {/* Left info */}
+                  <div className="flex items-start gap-4">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                      <ShoppingCart size={18} />
+                    </span>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-xs font-semibold text-[var(--text)]">{req.title}</h4>
+                        <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-semibold", cfg.pill)}>{cfg.label}</span>
+                        {req.priority === "High" && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[8px] font-semibold text-red-500">High priority</span>}
+                      </div>
+                      <p className="mt-1 text-[10px] text-[var(--text-subtle)]">{req.id} · {req.project} · {req.requestedBy}</p>
+                      <p className="mt-1.5 text-[9px] text-[var(--text-muted)]">{req.quantity} · Submitted {req.submitted}</p>
+                      {req.purchaseOrderNo && <p className="mt-1 text-[9px] font-semibold text-violet-600 dark:text-violet-400">PO: {req.purchaseOrderNo}</p>}
+                    </div>
+                  </div>
+                  {/* Right: amount + review */}
+                  <div className="flex items-center gap-4 sm:shrink-0">
+                    <span className="text-right">
+                      <b className="block text-sm text-[var(--text)]">{formatCurrency(selectedQuote?.amount ?? req.budgetCeiling, true)}</b>
+                      <small className="text-[8px] text-[var(--text-subtle)]">{selectedQuote ? "Selected value" : "Budget ceiling"}</small>
+                    </span>
+                    <button type="button" onClick={() => setSelectedId(req.id)}
+                      className="focus-ring rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-semibold text-white hover:bg-emerald-700">
+                      Review
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pipeline action buttons */}
+                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3">
+                  {/* Step indicator */}
+                  <div className="flex items-center gap-1 mr-2">
+                    {[1,2,3,4,5,6].map(step => (
+                      <span key={step} className={cn("size-2 rounded-full",
+                        step < cfg.step ? "bg-emerald-500" : step === cfg.step ? "bg-emerald-600" : "bg-[var(--border)]")} />
+                    ))}
+                    <span className="ml-1 text-[9px] text-[var(--text-muted)]">Step {cfg.step}/6</span>
+                  </div>
+
+                  {/* Action buttons per stage */}
+                  {req.status === "Approved" && (
+                    <button type="button" onClick={() => createPO(req)}
+                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-violet-700">
+                      <FileText size={12} /> Create Purchase Order
+                    </button>
+                  )}
+                  {req.status === "PO Created" && (
+                    <button type="button" onClick={() => sendPO(req)}
+                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-cyan-700">
+                      <Send size={12} /> Send PO to Vendor
+                    </button>
+                  )}
+                  {req.status === "PO Sent" && (
+                    <button type="button" onClick={() => sendInvoiceReminder(req)}
+                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-orange-600">
+                      <Send size={12} /> Send Invoice Reminder
+                    </button>
+                  )}
+                  {(req.status === "Invoice Reminder Sent" || req.status === "PO Sent") && (
+                    <button type="button" onClick={() => setPaymentWorkspace(true)}
+                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-1.5 text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
+                      <Upload size={12} /> Go to Payments
+                    </button>
+                  )}
+                  {req.status === "Payment slip uploaded" && (
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 size={12} /> Payment complete
+                    </span>
+                  )}
+                  {req.status === "Quotation review" && (
+                    <span className="text-[9px] text-[var(--text-muted)]">Select and approve a quotation to proceed →</span>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+          {visible.length === 0 && (
+            <div className="p-10 text-center">
+              <p className="text-xs font-semibold text-[var(--text)]">No requests in this stage</p>
+              <button type="button" onClick={() => setStatusFilter("All")} className="mt-2 text-[10px] text-emerald-600 hover:underline">View all requests</button>
+            </div>
+          )}
+        </div>
+      </section>
+      {selected && <ProcurementReviewOverlay request={selected} onUpdate={updateRequest} onClose={() => setSelectedId(null)} />}
+    </div>
+  );
 }
 
 function ProcurementPaymentWorkspace({ requests, areaFilter, projectFilter, onAreaFilter, onProjectFilter, onUpdate, onBack }: { requests: ProcurementRequest[]; areaFilter: string; projectFilter: string; onAreaFilter: (value: string) => void; onProjectFilter: (value: string) => void; onUpdate: (request: ProcurementRequest) => void; onBack: () => void }) {
@@ -731,7 +971,7 @@ function ProcurementQuotePreview({ request, quote, onClose }: { request: Procure
   return <Overlay open onClose={onClose} variant="panel" size="xl" zIndex={85} label="Uploaded vendor quotation" title={quote.vendor} description={`${quote.id} · ${quote.file}`} footer={<><p className="text-[9px] text-[var(--text-subtle)]">Submitted with {request.id}</p><button type="button" onClick={onClose} className="focus-ring h-10 rounded-md bg-[var(--brand-primary)] px-4 text-[10px] font-semibold text-white">Close quotation</button></>}><div className="min-h-full bg-[#edf1f5] p-4 dark:bg-slate-950 sm:p-7"><article className="mx-auto min-h-[760px] max-w-2xl border border-slate-300 bg-white p-8 text-slate-900 shadow-sm sm:p-10"><div className="flex items-start justify-between border-b border-slate-200 pb-6"><div><p className="text-lg font-bold">{quote.vendor}</p><p className="mt-1 text-[10px] text-slate-500">GST-registered procurement vendor</p></div><span className="rounded-md bg-blue-50 px-2 py-1 text-[9px] font-semibold text-blue-700">QUOTATION</span></div><div className="mt-8 grid grid-cols-2 gap-5 text-xs"><span><b className="block text-[9px] uppercase text-slate-400">Quotation number</b><span className="mt-2 block font-semibold">{quote.id}</span></span><span><b className="block text-[9px] uppercase text-slate-400">Quotation date</b><span className="mt-2 block font-semibold">{request.submitted}</span></span><span><b className="block text-[9px] uppercase text-slate-400">Issued to</b><span className="mt-2 block font-semibold">Pantiss Foundation</span></span><span><b className="block text-[9px] uppercase text-slate-400">Project</b><span className="mt-2 block font-semibold">{request.project}</span></span></div><div className="mt-9 border border-slate-200"><div className="grid grid-cols-[1fr_110px] bg-slate-50 px-4 py-3 text-[9px] font-semibold uppercase text-slate-500"><span>Description</span><span className="text-right">Amount</span></div><div className="grid grid-cols-[1fr_110px] border-t border-slate-200 px-4 py-5 text-xs"><span><b className="block">{request.title}</b><small className="mt-2 block leading-5 text-slate-500">{request.specification}</small><small className="mt-2 block text-slate-500">Quantity: {request.quantity}</small></span><strong className="text-right">{formatCurrency(quote.amount, true)}</strong></div></div><div className="mt-6 ml-auto max-w-xs space-y-3 text-xs"><div className="flex justify-between text-slate-500"><span>Subtotal</span><span>{formatCurrency(quote.amount / 1.18, true)}</span></div><div className="flex justify-between text-slate-500"><span>GST {quote.gstIncluded ? "(included)" : "(extra)"}</span><span>{quote.gstIncluded ? formatCurrency(quote.amount - quote.amount / 1.18, true) : "As applicable"}</span></div><div className="flex justify-between border-t border-slate-300 pt-3 text-base font-bold"><span>Total</span><span>{formatCurrency(quote.amount, true)}</span></div></div><div className="mt-10 grid grid-cols-3 gap-3">{[{ label: "Delivery", value: `${quote.deliveryDays} days` }, { label: "Warranty", value: quote.warranty }, { label: "Technical score", value: `${quote.technicalScore}/100` }].map((item) => <div key={item.label} className="rounded-md border border-slate-200 bg-slate-50 p-3"><p className="text-[8px] uppercase text-slate-400">{item.label}</p><p className="mt-2 text-xs font-semibold">{item.value}</p></div>)}</div><div className="mt-16 flex justify-between border-t border-dashed border-slate-300 pt-8 text-[9px] text-slate-400"><span>Authorized vendor signature</span><span>Valid for 30 days</span></div><div className="mt-16 flex items-center justify-between border-t border-slate-200 pt-5 text-[9px] text-slate-400"><span>{quote.file}</span><span>Uploaded through Pantiss ERP</span></div></article></div></Overlay>;
 }
 
-function CombinedApprovalsView() {
+export function CombinedApprovalsView() {
   const [type, setType] = useState<"Center" | "Procurement">("Center");
   return <div className="space-y-6"><section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-2 shadow-[var(--shadow-card)]"><div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Approval type"><button type="button" role="tab" aria-selected={type === "Center"} onClick={() => setType("Center")} className={cn("focus-ring flex min-h-14 items-center justify-center gap-3 rounded-[18px] px-4 text-xs font-semibold transition", type === "Center" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/15" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}><Building2 size={16} />Center approvals</button><button type="button" role="tab" aria-selected={type === "Procurement"} onClick={() => setType("Procurement")} className={cn("focus-ring flex min-h-14 items-center justify-center gap-3 rounded-[18px] px-4 text-xs font-semibold transition", type === "Procurement" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/15" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}><ShoppingCart size={16} />Procurement approvals</button></div></section>{type === "Center" ? <CenterApprovalsView /> : <ProcurementApprovalsView />}</div>;
 }

@@ -44,55 +44,551 @@ function PortfolioFinanceDashboard() {
   };
   const onTrackShare = Math.round(statusCounts.onTrack / allProjects.length * 100);
   const watchShare = Math.round((statusCounts.onTrack + statusCounts.watch) / allProjects.length * 100);
-  const dashboardGroups = [
-    {
-      title: "Available balance",
-      description: "Liquid reserves, investments and current obligations",
-      items: [
-        { label: "Total fixed deposits", value: "₹2.85 Cr", note: "Across 6 active deposits · 7.2% avg. yield", icon: Landmark },
-        { label: "Total mutual funds", value: "₹1.42 Cr", note: "Current market value · +8.4% YTD", icon: TrendingUp },
-        { label: "Total liabilities", value: formatCurrency(portfolioTotals.committed), note: "Approved payables and commitments", icon: Banknote },
-      ],
-    },
-    {
-      title: "Financial stats",
-      description: "Portfolio allocation and expenditure performance",
-      items: [
-        { label: "Approved portfolio", value: formatCurrency(portfolioTotals.approved), note: `${portfolioTotals.projects} projects · 7 thematic areas`, icon: Landmark },
-        { label: "Funds released", value: formatCurrency(portfolioTotals.released), note: `${releaseRate}% of approved budget`, icon: WalletCards },
-        { label: "Verified expenditure", value: formatCurrency(portfolioTotals.spent), note: `${utilization}% portfolio utilization`, icon: ReceiptIndianRupee },
-      ],
-    },
-    {
-      title: "Projects requiring action",
-      description: `${portfolioTotals.atRisk} projects currently need a finance response`,
-      items: [
-        { label: "Compliance completeness", value: "94%", note: "Vouchers and supporting records verified", icon: ShieldCheck },
-        { label: "Released", value: formatCurrency(portfolioTotals.released), note: `${releaseRate}% released across active projects`, icon: CheckCircle2 },
-        { label: "Corpus", value: "₹4.27 Cr", note: "Fixed deposits and mutual funds combined", icon: CircleDollarSign },
-      ],
-    },
-  ];
+  return (
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-[0_28px_80px_rgba(5,150,105,.18)] sm:p-8">
+        <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
+        <div className="absolute right-12 top-8 size-40 rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]">
+              <CircleDollarSign size={13} /> Finance portfolio control
+            </span>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
+              Every rupee, from grant to impact.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/65">
+              Organization-wide visibility into approved budgets, fund releases, verified expenditure, commitments, advances and financial compliance across all thematic portfolios.
+            </p>
+          </div>
+          <div className="w-full max-w-xs rounded-2xl border border-white/15 bg-black/15 p-4 backdrop-blur">
+            <div className="flex items-end justify-between">
+              <span className="text-[10px] text-white/60">Portfolio utilization</span>
+              <span className="text-2xl font-semibold">{utilization}%</span>
+            </div>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15">
+              <div className="h-full rounded-full bg-emerald-300" style={{ width: `${utilization}%` }} />
+            </div>
+            <div className="mt-3 flex justify-between text-[9px] text-white/50">
+              <span>{formatCurrency(portfolioTotals.spent)} spent</span>
+              <span>{formatCurrency(portfolioTotals.approved)} approved</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  return <div className="space-y-6">
-    <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-[0_28px_80px_rgba(5,150,105,.18)] sm:p-8">
-      <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
-      <div className="absolute right-12 top-8 size-40 rounded-full bg-emerald-300/10 blur-3xl" />
-      <div className="relative flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
-        <div className="max-w-2xl"><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]"><CircleDollarSign size={13} />Finance portfolio control</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Every rupee, from grant to impact.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/65">Organization-wide visibility into approved budgets, fund releases, verified expenditure, commitments, advances and financial compliance across all thematic portfolios.</p></div>
-        <div className="w-full max-w-xs rounded-2xl border border-white/15 bg-black/15 p-4 backdrop-blur"><div className="flex items-end justify-between"><span className="text-[10px] text-white/60">Portfolio utilization</span><span className="text-2xl font-semibold">{utilization}%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-300" style={{ width: `${utilization}%` }} /></div><div className="mt-3 flex justify-between text-[9px] text-white/50"><span>{formatCurrency(portfolioTotals.spent)} spent</span><span>{formatCurrency(portfolioTotals.approved)} approved</span></div></div>
+      {/* Row 1: Cumulative financials */}
+      <section aria-labelledby="cumulative-financials-heading">
+        <div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-end">
+          <div>
+            <h3 id="cumulative-financials-heading" className="text-base font-semibold text-[var(--text)]">
+              Cumulative financials
+            </h3>
+            <p className="mt-1 text-xs text-[var(--text-subtle)]">
+              Consolidated liquid reserves, institutional investments, and obligations
+            </p>
+          </div>
+          <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+            Treasury & Reserves
+          </span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Card 1: Total Balance (clickable -> /finance/banking) */}
+          <motion.article
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate("/finance/banking")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/finance/banking");
+              }
+            }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.04 }}
+            className="group relative cursor-pointer rounded-2xl border border-emerald-500/30 bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition-all hover:-translate-y-1 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 focus-ring"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                <Landmark size={18} />
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                Banking <ArrowUpRight size={11} />
+              </span>
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              ₹38.45 Cr
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Balance
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              Across 4 institutional bank accounts · Click to view Banking ledger
+            </p>
+          </motion.article>
+
+          {/* Card 2: Total Investments (clickable -> /finance/investments) */}
+          <motion.article
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate("/finance/investments")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/finance/investments");
+              }
+            }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="group relative cursor-pointer rounded-2xl border border-blue-500/30 bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition-all hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 focus-ring"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                <TrendingUp size={18} />
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-semibold text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                Investments <ArrowUpRight size={11} />
+              </span>
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              ₹4.27 Cr
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Investments
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              Fixed deposits (₹2.85 Cr) & liquid mutual funds (₹1.42 Cr) · Click to view portfolio
+            </p>
+          </motion.article>
+
+          {/* Card 3: Total Liabilities */}
+          <motion.article
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-purple-500/10 text-purple-600">
+                <Banknote size={18} />
+              </span>
+              <span className="size-2 rounded-full bg-purple-500/70" />
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              {formatCurrency(portfolioTotals.committed)}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Liabilities
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              Approved purchase orders, contractor retentions & statutory payables
+            </p>
+          </motion.article>
+        </div>
+      </section>
+
+      {/* Row 2: Annual Financials */}
+      <section aria-labelledby="annual-financials-heading">
+        <div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-end">
+          <div>
+            <h3 id="annual-financials-heading" className="text-base font-semibold text-[var(--text)]">
+              Annual Financials
+            </h3>
+            <p className="mt-1 text-xs text-[var(--text-subtle)]">
+              FY 2026–27 budgetary sanctions, fund receipts, expenditure, and corpus
+            </p>
+          </div>
+          <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+            FY 2026–27 Performance
+          </span>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Card 1: Total Sanctions */}
+          <motion.article
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.16 }}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <FileCheck2 size={18} />
+              </span>
+              <span className="size-2 rounded-full bg-emerald-500/70" />
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              {formatCurrency(portfolioTotals.approved)}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Sanctions
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              {portfolioTotals.projects} approved projects across 7 thematic areas
+            </p>
+          </motion.article>
+
+          {/* Card 2: Total Received */}
+          <motion.article
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.20 }}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
+                <WalletCards size={18} />
+              </span>
+              <span className="size-2 rounded-full bg-blue-500/70" />
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              {formatCurrency(portfolioTotals.released)}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Received
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              {releaseRate}% of sanctioned donor allocations received in bank
+            </p>
+          </motion.article>
+
+          {/* Card 3: Total Expenditure */}
+          <motion.article
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
+                <ReceiptIndianRupee size={18} />
+              </span>
+              <span className="size-2 rounded-full bg-amber-500/70" />
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+              {formatCurrency(portfolioTotals.spent)}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Expenditure
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              {utilization}% verified portfolio utilization against sanctioned funds
+            </p>
+          </motion.article>
+
+          {/* Card 4: Total Corpus */}
+          <motion.article
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28 }}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"
+          >
+            <div className="flex items-start justify-between">
+              <span className="grid size-10 place-items-center rounded-xl bg-teal-500/10 text-teal-600">
+                <CircleDollarSign size={18} />
+              </span>
+              <span className="size-2 rounded-full bg-teal-500/70" />
+            </div>
+            <p className="mt-5 text-2xl font-bold tracking-tight text-[var(--text)]">
+              ₹5.60 Cr
+            </p>
+            <p className="mt-1 text-xs font-semibold text-[var(--text)]">
+              Total Corpus
+            </p>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">
+              Unrestricted core endowment and capital foundation reserves
+            </p>
+          </motion.article>
+        </div>
+      </section>
+
+      {/* Row 3: Compliance Completeness + Highlights */}
+      <section aria-labelledby="compliance-highlights-heading" className="grid items-stretch gap-5 xl:grid-cols-[1fr_1.4fr]">
+
+        {/* Left: Compliance Completeness Card */}
+        <motion.article
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32 }}
+          className="flex flex-col justify-between rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 id="compliance-highlights-heading" className="text-base font-semibold text-[var(--text)]">
+                Compliance Completeness
+              </h3>
+              <p className="mt-1 text-xs text-[var(--text-subtle)]">
+                Regulatory & internal control adherence across all active projects
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck size={10} /> Live
+            </span>
+          </div>
+
+          {/* Donut Score — compact, centred */}
+          <div className="flex flex-col items-center gap-3 py-4">
+            <div
+              className="relative grid size-36 place-items-center rounded-full"
+              style={{ background: `conic-gradient(#10b981 0 88%, #f59e0b 88% 94%, #ef4444 94% 100%)` }}
+            >
+              <div className="grid size-24 place-items-center rounded-full bg-[var(--module-bg)] text-center">
+                <span>
+                  <span className="block text-2xl font-semibold text-emerald-600 dark:text-emerald-400">88%</span>
+                  <span className="text-[9px] text-[var(--text-subtle)]">overall</span>
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 text-[10px]">
+              {[
+                { label: "Compliant", color: "bg-emerald-500", val: "88%" },
+                { label: "At risk",   color: "bg-amber-500",   val: "6%"  },
+                { label: "Overdue",   color: "bg-red-500",     val: "6%"  },
+              ].map((item) => (
+                <span key={item.label} className="flex items-center gap-1.5">
+                  <span className={cn("size-2 rounded-full", item.color)} />
+                  <span className="text-[var(--text-muted)]">{item.label}</span>
+                  <span className="font-semibold text-[var(--text)]">{item.val}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Control checklist — fills remaining height */}
+          <div className="space-y-2.5">
+            {[
+              { label: "Bank reconciliation statements", done: true,  pct: 100 },
+              { label: "Voucher & supporting documents",  done: true,  pct: 93  },
+              { label: "Advance settlement compliance",   done: false, pct: 72  },
+              { label: "Statutory TDS / GST filings",     done: true,  pct: 100 },
+              { label: "Donor utilisation certificates",  done: false, pct: 61  },
+              { label: "Audit action-taken reports",      done: true,  pct: 88  },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                    {item.done
+                      ? <CheckCircle2 size={11} className="text-emerald-500" />
+                      : <AlertTriangle size={11} className="text-amber-500" />}
+                    {item.label}
+                  </span>
+                  <span className={cn("font-semibold",
+                    item.pct >= 90 ? "text-emerald-600 dark:text-emerald-400"
+                    : item.pct >= 70 ? "text-amber-600"
+                    : "text-red-500")}>
+                    {item.pct}%
+                  </span>
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--border)]">
+                  <div
+                    className={cn("h-full rounded-full transition-all",
+                      item.pct >= 90 ? "bg-emerald-500"
+                      : item.pct >= 70 ? "bg-amber-400"
+                      : "bg-red-500")}
+                    style={{ width: `${item.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.article>
+
+        {/* Right: Highlights / Notifications Panel */}
+        <motion.article
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.36 }}
+          className="flex max-h-[520px] flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"
+        >
+          {/* Panel header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-5 py-4 sm:px-6">
+            <div>
+              <h3 className="text-base font-semibold text-[var(--text)]">Highlights</h3>
+              <p className="mt-0.5 text-xs text-[var(--text-subtle)]">Recent activity, alerts & reminders across all finance modules</p>
+            </div>
+            <span className="relative grid size-8 shrink-0 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-muted)]">
+              <WalletCards size={15} />
+              <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-amber-500 ring-2 ring-[var(--module-bg)]" />
+            </span>
+          </div>
+
+          {/* Notification list — scrollable, fills height between header and footer */}
+          <div
+            className="min-h-0 flex-1 divide-y divide-[var(--border)] overflow-y-auto"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "var(--border) transparent" }}
+          >
+            {[
+              {
+                icon: AlertTriangle,
+                color: "text-red-500",
+                bg: "bg-red-500/10",
+                title: "Advance overdue — Project MNRE-027",
+                body: "₹3.2 L advance unsettled for 48 days. Settlement vouchers not received from Odisha field office.",
+                time: "2 hrs ago",
+                tag: "Action Required",
+                tagColor: "bg-red-500/10 text-red-600 dark:text-red-400",
+              },
+              {
+                icon: ShieldCheck,
+                color: "text-amber-500",
+                bg: "bg-amber-500/10",
+                title: "TDS return filing due in 3 days",
+                body: "Q2 FY26-27 TDS filing deadline — 7 Oct 2026. Ensure challan payments are completed before filing.",
+                time: "5 hrs ago",
+                tag: "Compliance",
+                tagColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              },
+              {
+                icon: TrendingUp,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/10",
+                title: "FD maturity — SBI/FD/389102948",
+                body: "Fixed Deposit of ₹1.00 Cr matures on 15 Dec 2026. Renewal instructions required from Finance Head.",
+                time: "Today, 9:30 AM",
+                tag: "Investments",
+                tagColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+              },
+              {
+                icon: FileCheck2,
+                color: "text-blue-500",
+                bg: "bg-blue-500/10",
+                title: "Payment voucher awaiting approval",
+                body: "₹18.6 L vendor payment to M/s EduBuild Infra Pvt. Ltd. pending Level-2 finance approval since 26 Sep.",
+                time: "Yesterday",
+                tag: "Approvals",
+                tagColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+              },
+              {
+                icon: CheckCircle2,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/10",
+                title: "Donor utilisation certificate submitted",
+                body: "UC for UNICEF grant (Project WASH-041) submitted successfully. ₹42.8 L utilisation confirmed.",
+                time: "28 Sep",
+                tag: "Completed",
+                tagColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+              },
+              {
+                icon: AlertTriangle,
+                color: "text-amber-500",
+                bg: "bg-amber-500/10",
+                title: "Budget variance exceeds 15% — NHM-014",
+                body: "Travel & accommodation line exceeds sanctioned budget by ₹1.1 L. Re-appropriation request pending.",
+                time: "27 Sep",
+                tag: "Budget",
+                tagColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              },
+              {
+                icon: WalletCards,
+                color: "text-teal-500",
+                bg: "bg-teal-500/10",
+                title: "Salary disbursed for September 2026",
+                body: "Payroll of ₹74.2 L disbursed to 284 employees across 7 field offices. No exceptions flagged.",
+                time: "26 Sep",
+                tag: "Salary",
+                tagColor: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+              },
+            ].map((notif, idx) => {
+              const Icon = notif.icon;
+              return (
+                <div
+                  key={idx}
+                  className="flex gap-3 px-5 py-3.5 transition-colors hover:bg-[var(--surface-soft)] sm:px-6"
+                >
+                  <span className={cn("mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl", notif.bg, notif.color)}>
+                    <Icon size={14} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <p className="text-[11px] font-semibold text-[var(--text)]">{notif.title}</p>
+                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[8px] font-semibold", notif.tagColor)}>
+                        {notif.tag}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-4 text-[var(--text-subtle)]">{notif.body}</p>
+                    <p className="mt-1.5 text-[9px] text-[var(--text-muted)]">{notif.time}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer — navigates to Alerts page */}
+          <div className="shrink-0 border-t border-[var(--border)] px-5 py-3 sm:px-6">
+            <button
+              type="button"
+              onClick={() => navigate("/finance/alerts")}
+              className="focus-ring group inline-flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-center text-[10px] font-semibold text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
+            >
+              View all alerts & notifications
+              <ArrowUpRight size={11} className="transition-transform group-hover:-translate-y-px group-hover:translate-x-px" />
+            </button>
+          </div>
+        </motion.article>
+      </section>
+
+    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="text-base font-semibold text-[var(--text)]">Thematic financial scorecards</h3>
+          <p className="mt-1 text-xs text-[var(--text-subtle)]">Select a thematic area to review every project and transaction-level control</p>
+        </div>
+        <span className="w-fit rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-[10px] text-emerald-600 dark:text-emerald-400">
+          FY 2026–27 · Updated 03 Aug
+        </span>
+      </div>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        {financeAreas.map((area) => {
+          const totals = areaTotals(area);
+          return (
+            <button
+              key={area.id}
+              type="button"
+              onClick={() => navigate(`/finance/${area.id}`)}
+              className="focus-ring group rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-[0_16px_38px_rgba(5,150,105,.09)]"
+            >
+              <div className="flex items-start justify-between">
+                <span className="flex items-center gap-3">
+                  <span className="grid size-10 place-items-center rounded-xl text-white" style={{ background: area.color }}>
+                    <Building2 size={17} />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-[var(--text)]">{area.name}</span>
+                    <span className="mt-1 block text-[9px] text-[var(--text-subtle)]">{area.projects.length} active projects</span>
+                  </span>
+                </span>
+                <ArrowUpRight size={15} className="text-[var(--text-subtle)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  { label: "Approved", value: formatCurrency(totals.approved) },
+                  { label: "Released", value: formatCurrency(totals.released) },
+                  { label: "Spent", value: formatCurrency(totals.spent) },
+                  { label: "Available", value: formatCurrency(totals.available) }
+                ].map((metric) => (
+                  <span key={metric.label} className="rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3">
+                    <span className="block text-sm font-semibold text-[var(--text)]">{metric.value}</span>
+                    <span className="mt-1 block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">{metric.label}</span>
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border)]">
+                  <div className="h-full rounded-full" style={{ width: `${totals.utilization}%`, background: area.color }} />
+                </div>
+                <span className="text-[10px] font-semibold text-[var(--text-muted)]">{totals.utilization}% utilized</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </section>
-
-    {dashboardGroups.map((group, groupIndex) => <section key={group.title} aria-labelledby={`finance-group-${groupIndex}`}><div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-end"><div><h3 id={`finance-group-${groupIndex}`} className="text-base font-semibold text-[var(--text)]">{group.title}</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">{group.description}</p></div><span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Live portfolio view</span></div><div className="grid gap-4 md:grid-cols-3">{group.items.map((item, itemIndex) => { const Icon = item.icon; return <motion.article key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (groupIndex * 3 + itemIndex) * .04 }} className="group rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-emerald-500/25"><div className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><Icon size={18} /></span><span className="size-2 rounded-full bg-emerald-500/70" /></div><p className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-3 text-[10px] leading-4 text-[var(--text-subtle)]">{item.note}</p></motion.article>; })}</div></section>)}
-
-    <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-      <article className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Thematic expenditure profile</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Verified expenditure against approved allocation</p></div><div className="mt-7 space-y-5">{financeAreas.map((area) => { const totals = areaTotals(area); return <button key={area.id} type="button" onClick={() => navigate(`/finance/${area.id}`)} className="focus-ring group block w-full text-left"><div className="flex items-center justify-between gap-4 text-xs"><span className="flex items-center gap-2 font-medium text-[var(--text)]"><span className="size-2 rounded-full" style={{ background: area.color }} />{area.name}</span><span className="text-[var(--text-subtle)]">{formatCurrency(totals.spent)} / {formatCurrency(totals.approved)} <b className="ml-2 text-[var(--text)]">{totals.utilization}%</b></span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full transition-all group-hover:brightness-110" style={{ width: `${totals.utilization}%`, background: area.color }} /></div></button>; })}</div></article>
-      <article className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Control status</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Latest finance review across {allProjects.length} projects</p></div><div className="mx-auto mt-7 grid size-40 place-items-center rounded-full" style={{ background: `conic-gradient(#10b981 0 ${onTrackShare}%, #f59e0b ${onTrackShare}% ${watchShare}%, #ef4444 ${watchShare}% 100%)` }}><div className="grid size-28 place-items-center rounded-full bg-[var(--module-bg)] text-center"><span><span className="block text-3xl font-semibold text-[var(--text)]">{allProjects.length}</span><span className="text-[10px] text-[var(--text-subtle)]">projects</span></span></div></div><div className="mt-7 grid grid-cols-3 gap-2 text-center">{[{ label: "On track", value: statusCounts.onTrack, color: "bg-emerald-500" }, { label: "Watch", value: statusCounts.watch, color: "bg-amber-500" }, { label: "Action", value: statusCounts.action, color: "bg-red-500" }].map((item) => <div key={item.label}><span className={cn("mx-auto mb-2 block size-1.5 rounded-full", item.color)} /><span className="block text-sm font-semibold text-[var(--text)]">{item.value}</span><span className="text-[9px] text-[var(--text-subtle)]">{item.label}</span></div>)}</div></article>
-    </section>
-
-    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><h3 className="text-base font-semibold text-[var(--text)]">Thematic financial scorecards</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Select a thematic area to review every project and transaction-level control</p></div><span className="w-fit rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-[10px] text-emerald-600 dark:text-emerald-400">FY 2026–27 · Updated 03 Aug</span></div><div className="mt-6 grid gap-4 lg:grid-cols-2">{financeAreas.map((area) => { const totals = areaTotals(area); return <button key={area.id} type="button" onClick={() => navigate(`/finance/${area.id}`)} className="focus-ring group rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-[0_16px_38px_rgba(5,150,105,.09)]"><div className="flex items-start justify-between"><span className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl text-white" style={{ background: area.color }}><Building2 size={17} /></span><span><span className="block text-sm font-semibold text-[var(--text)]">{area.name}</span><span className="mt-1 block text-[9px] text-[var(--text-subtle)]">{area.projects.length} active projects</span></span></span><ArrowUpRight size={15} className="text-[var(--text-subtle)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></div><div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">{[{ label: "Approved", value: formatCurrency(totals.approved) }, { label: "Released", value: formatCurrency(totals.released) }, { label: "Spent", value: formatCurrency(totals.spent) }, { label: "Available", value: formatCurrency(totals.available) }].map((metric) => <span key={metric.label} className="rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3"><span className="block text-sm font-semibold text-[var(--text)]">{metric.value}</span><span className="mt-1 block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">{metric.label}</span></span>)}</div><div className="mt-4 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full" style={{ width: `${totals.utilization}%`, background: area.color }} /></div><span className="text-[10px] font-semibold text-[var(--text-muted)]">{totals.utilization}% utilized</span></div></button>; })}</div></section>
-  </div>;
+  </div>
+  );
 }
 
 function AreaFinanceDashboard({ area }: { area: FinanceArea }) {
