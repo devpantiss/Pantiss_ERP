@@ -17,118 +17,13 @@ import {
   Eye,
   Download
 } from "lucide-react";
-import { formatCurrency } from "./data";
+import { financeAreas, formatCurrency } from "./data";
+import { useEmployeeInvoices, type ReimbursementClaim } from "./employeeInvoiceStore";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
 
-export interface ReimbursementClaim {
-  id: string;
-  claimantName: string;
-  employeeId: string;
-  project: string;
-  center: string;
-  date: string;
-  category: "Inter-District Travel" | "Field Mobilization" | "Accommodation & Food" | "Printing & Supplies" | "Emergency Float";
-  amount: number; // in Rupees
-  billsCount: number;
-  description: string;
-  receiptName: string;
-  status: "Pending Verification" | "Finance Approved" | "Disbursed" | "Rejected";
-  managerApproved: boolean;
-  financeAudited: boolean;
-  payoutDate?: string;
-  bankUtr?: string;
-}
-
-const initialClaims: ReimbursementClaim[] = [
-  {
-    id: "CLM-2026-0182",
-    claimantName: "Sunita Majhi",
-    employeeId: "PAN-EMP-0104",
-    project: "Tribal Producer Collective",
-    center: "Koraput Regional Office",
-    date: "27 Sep 2026",
-    category: "Inter-District Travel",
-    amount: 8450,
-    billsCount: 4,
-    description: "Travel to 6 tribal SHG clusters in Semiliguda and Kundra blocks for farmer registration.",
-    receiptName: "koraput-travel-bills.pdf",
-    status: "Finance Approved",
-    managerApproved: true,
-    financeAudited: true
-  },
-  {
-    id: "CLM-2026-0181",
-    claimantName: "Alok Kumar Sahoo",
-    employeeId: "PAN-EMP-0103",
-    project: "PMKVY 4.0 Odisha Skills",
-    center: "Keonjhar Center",
-    date: "26 Sep 2026",
-    category: "Printing & Supplies",
-    amount: 14200,
-    billsCount: 2,
-    description: "Emergency batch study materials, assessment answer sheets and lab badge lanyards.",
-    receiptName: "print-invoice-keonjhar.pdf",
-    status: "Pending Verification",
-    managerApproved: true,
-    financeAudited: false
-  },
-  {
-    id: "CLM-2026-0180",
-    claimantName: "Kavita Soren",
-    employeeId: "PAN-EMP-0107",
-    project: "Swasthya Mobile Clinics",
-    center: "Mayurbhanj Mobile Clinic",
-    date: "25 Sep 2026",
-    category: "Field Mobilization",
-    amount: 6800,
-    billsCount: 3,
-    description: "Community health mobilization shamiana rental & refreshment for screening camp in Baripada.",
-    receiptName: "mayurbhanj-camp-receipts.pdf",
-    status: "Disbursed",
-    managerApproved: true,
-    financeAudited: true,
-    payoutDate: "27 Sep 2026",
-    bankUtr: "HDFCR5202609270841"
-  },
-  {
-    id: "CLM-2026-0179",
-    claimantName: "Bishnu Charan Das",
-    employeeId: "PAN-EMP-0105",
-    project: "Maternal Health Continuum",
-    center: "Bhubaneswar HQ",
-    date: "24 Sep 2026",
-    category: "Accommodation & Food",
-    amount: 11500,
-    billsCount: 3,
-    description: "Donor evaluation team field visit stay and logistics in Rayagada.",
-    receiptName: "hotel-rayagada-bills.pdf",
-    status: "Disbursed",
-    managerApproved: true,
-    financeAudited: true,
-    payoutDate: "26 Sep 2026",
-    bankUtr: "SBINR2202609260192"
-  },
-  {
-    id: "CLM-2026-0178",
-    claimantName: "Debashis Nayak",
-    employeeId: "PAN-EMP-0106",
-    project: "Executive & Core Finance",
-    center: "Bhubaneswar HQ",
-    date: "23 Sep 2026",
-    category: "Emergency Float",
-    amount: 5200,
-    billsCount: 1,
-    description: "Statutory filing stamp papers, ROC courier and chartered accountant notarization fees.",
-    receiptName: "notary-stamp-receipts.pdf",
-    status: "Finance Approved",
-    managerApproved: true,
-    financeAudited: true
-  }
-];
-
 export function ReimbursementView() {
-  const [claims, setClaims] = useState<ReimbursementClaim[]>(initialClaims);
+  const { claims, setClaims, error: invoiceError } = useEmployeeInvoices();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -172,12 +67,12 @@ export function ReimbursementView() {
     if (!claimantName || isNaN(amt) || amt <= 0) return;
 
     const newClaim: ReimbursementClaim = {
-      id: `CLM-2026-${String(claims.length + 183).padStart(4, "0")}`,
+      id: `CLM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       claimantName: claimantName.trim(),
       employeeId: empId.trim() || "PAN-EMP-TEMP",
       project,
       center,
-      date: "Today",
+      date: new Date().toISOString(),
       category,
       amount: amt,
       billsCount: 1,
@@ -188,7 +83,7 @@ export function ReimbursementView() {
       financeAudited: false
     };
 
-    setClaims([newClaim, ...claims]);
+    if (!setClaims([newClaim, ...claims])) return;
     setShowNewClaimModal(false);
     // reset form
     setClaimantName("");
@@ -199,30 +94,31 @@ export function ReimbursementView() {
   };
 
   const handleApproveClaim = (claimId: string) => {
-    setClaims((prev) =>
+    const saved = setClaims((prev) =>
       prev.map((c) =>
         c.id === claimId
           ? { ...c, status: "Finance Approved", financeAudited: true }
           : c
       )
     );
-    setSelectedClaim(null);
+    if (saved) setSelectedClaim(null);
   };
 
   const handleDisburseClaim = (claimId: string) => {
     const utr = `HDFCR5${Date.now().toString().slice(-8)}`;
-    setClaims((prev) =>
+    const saved = setClaims((prev) =>
       prev.map((c) =>
         c.id === claimId
-          ? { ...c, status: "Disbursed", payoutDate: "Today", bankUtr: utr }
+          ? { ...c, status: "Disbursed", payoutDate: new Date().toISOString(), bankUtr: utr }
           : c
       )
     );
-    setSelectedClaim(null);
+    if (saved) setSelectedClaim(null);
   };
 
   return (
     <div className="space-y-6">
+      {invoiceError && <p role="alert" className="rounded-xl border border-[var(--border)] p-4 text-sm text-[var(--text)]">{invoiceError}</p>}
       {/* Hero Banner */}
       <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-teal-950 to-emerald-900 p-6 text-white shadow-xl sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
@@ -514,10 +410,7 @@ export function ReimbursementView() {
                   onChange={(e) => setProject(e.target.value)}
                   className="focus-ring mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
                 >
-                  <option value="PMKVY 4.0 Odisha Skills">PMKVY 4.0 Odisha Skills</option>
-                  <option value="Tribal Producer Collective">Tribal Producer Collective</option>
-                  <option value="Swasthya Mobile Clinics">Swasthya Mobile Clinics</option>
-                  <option value="Farm Prosperity Initiative">Farm Prosperity Initiative</option>
+                  {financeAreas.map((area) => <optgroup key={area.id} label={area.name}>{area.projects.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</optgroup>)}
                   <option value="Executive & Core Finance">Executive & Core Finance</option>
                 </select>
               </div>

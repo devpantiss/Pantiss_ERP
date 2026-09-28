@@ -1,23 +1,11 @@
-import { useState, useMemo } from "react";
-import {
-  Scale,
-  Search,
-  Filter,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  FileText,
-  Calendar,
-  Download,
-  Building2,
-  ShieldCheck,
-  CreditCard,
-  ChevronRight,
-  ExternalLink
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Scale, CheckCircle2, Clock, CreditCard, ReceiptText } from "lucide-react";
 import { formatCurrency } from "./data";
 import { cn } from "../../utils/cn";
-import { Overlay } from "../../components/ui/Overlay";
+
+import { TaxFilingEditor, FilingDocument, type FilingTarget } from "./TaxFilingEditor";
+import { loadTaxFilings, type TaxFiling } from "./taxFilingStore";
 
 interface GstReturnRecord {
   period: string;
@@ -29,7 +17,7 @@ interface GstReturnRecord {
   taxLiability: number; // in Lakhs
   itcClaimed: number; // in Lakhs
   netPaidCash: number;
-  status: "Filed on Time" | "Upcoming" | "Action Required";
+  status: "Filed" | "Filed on Time" | "Upcoming" | "Action Required";
 }
 
 interface TdsChallanRecord {
@@ -44,7 +32,7 @@ interface TdsChallanRecord {
   status: "Paid & Reconciled" | "Scheduled";
 }
 
-const gstRecords: GstReturnRecord[] = [
+const initialGstRecords: GstReturnRecord[] = [
   {
     period: "August 2026",
     returnType: "GSTR-3B",
@@ -160,167 +148,97 @@ const tdsChallans: TdsChallanRecord[] = [
 ];
 
 export function TaxationView() {
-  const [activeTab, setActiveTab] = useState<"gst" | "tds" | "fcra">("gst");
-  const [selectedChallan, setSelectedChallan] = useState<TdsChallanRecord | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get("view");
+  const activeTab = view === "tds" || view === "itc" ? view : "gst";
+  const setActiveTab = (tab: string) => setSearchParams({ view: tab }, { replace: true });
+  const [filings, setFilings] = useState<Record<string, TaxFiling>>({});
+  const [loading, setLoading] = useState(true);
+  const [storageError, setStorageError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [target, setTarget] = useState<FilingTarget | null>(null);
+  useEffect(() => {
+    let active = true;
+    loadTaxFilings().then((records) => {
+      if (active) setFilings(Object.fromEntries(records.map((record) => [record.id, record])));
+    }).catch(() => { if (active) setStorageError("Saved filings could not be loaded. Reload the page to try again."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+  const gstRecords = initialGstRecords.map((record): GstReturnRecord => {
+    const filing = filings[`${record.returnType}-${record.period}`];
+    return filing ? { ...record, status: "Filed", filedDate: filing.filedDate, arn: filing.reference } : record;
+  });
+  const filingButton = (item: FilingTarget) => <button type="button" disabled={loading || !!storageError} onClick={() => setTarget(item)} className="focus-ring mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-xs font-medium text-[var(--brand-primary)] disabled:opacity-50">{filings[item.id] ? "Edit filing" : "Update filing / upload"}</button>;
+  const filedReturns = gstRecords.filter((record) => record.filedDate);
+  const creditRecords = gstRecords.filter((record) => record.returnType === "GSTR-3B");
+  const claimedCredit = creditRecords.reduce((total, record) => total + (record.filedDate ? record.itcClaimed : 0), 0);
+  const pendingCredit = creditRecords.reduce((total, record) => total + (!record.filedDate ? record.itcClaimed : 0), 0);
+  const totalTds = tdsChallans.reduce((total, record) => total + record.amount, 0);
+  const paidTds = tdsChallans.reduce((total, record) => total + (record.status === "Paid & Reconciled" ? record.amount : 0), 0);
+  const rupees = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
+  const monitors = [
+    { id: "gst", label: "GST filing", icon: Scale, value: `${filedReturns.length} / ${gstRecords.length} filed`, detail: `${gstRecords.length - filedReturns.length} returns awaiting filing · All listed periods` },
+    { id: "itc", label: "Input tax credit tracking", icon: ReceiptText, value: formatCurrency(claimedCredit, true), detail: `${formatCurrency(pendingCredit, true)} proposed · Monthly GSTR-3B records` },
+    { id: "tds", label: "TDS filing (total)", icon: CreditCard, value: rupees(totalTds), detail: `${rupees(paidTds)} paid · ${rupees(totalTds - paidTds)} scheduled` },
+  ] as const;
 
   return (
     <div className="space-y-6">
-      {/* Hero Banner */}
-      <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-900 p-6 text-white shadow-xl sm:p-8">
-        <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
-        <div className="absolute right-24 top-12 size-36 rounded-full bg-emerald-300/10 blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]">
-              <Scale size={13} /> Statutory Tax & Regulatory Compliance
-            </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              Goods & Services Tax, TDS & 12A/80G Desk
-            </h2>
-            <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
-              Integrated statutory tax registry for GST returns, Challan ITNS-281 withholding tax remittances, 26AS matching, and charitable trust tax exemptions.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => alert("Statutory Tax Compliance Pack FY 2026-27 (Q1-Q2) downloaded.")}
-              className="focus-ring inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-emerald-900 shadow-md transition hover:bg-emerald-50"
-            >
-              <Download size={14} /> Download Tax Audit Pack
-            </button>
-          </div>
-        </div>
+      {loading && <p role="status" className="text-sm text-[var(--text-muted)]">Loading saved filings…</p>}
+      {storageError && <p role="alert" className="text-sm text-[var(--text)]">{storageError}</p>}
+      {notice && <p role="status" className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--text)]">{notice}</p>}
+      {target && <TaxFilingEditor key={target.id} target={target} existing={filings[target.id]} onClose={() => setTarget(null)} onSaved={(filing) => {
+        setFilings((current) => ({ ...current, [filing.id]: filing }));
+        setNotice(`${target.title} marked as filed. Supporting document saved.`);
+        setTarget(null);
+      }} />}
+      <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] sm:p-8">
+        <p className="text-xs font-medium text-[var(--brand-primary)]">Taxation monitor</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text)]">Filings, credits & tax deducted</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">Monitor GST filing, track input tax credit, and review total TDS with payment and return-filing status in one place.</p>
+        <p className="mt-4 text-xs text-[var(--text-subtle)]">Sample records · FY 2026–27, plus the prior-year annual GST return</p>
       </section>
 
-      {/* KPI Cards */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between">
-            <span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-              <Scale size={18} />
-            </span>
-            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">
-              Active GSTIN
-            </span>
-          </div>
-          <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">₹4.82 Lakhs</p>
-          <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">Net Cash GST Paid (Last Month)</p>
-          <p className="mt-2 text-[10px] text-[var(--text-subtle)]">Output ₹12.40L less Input Credit ₹7.58L</p>
-        </article>
-
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between">
-            <span className="grid size-10 place-items-center rounded-xl bg-teal-500/10 text-teal-600">
-              <CreditCard size={18} />
-            </span>
-            <span className="rounded-full bg-teal-500/10 px-2 py-0.5 text-[9px] font-semibold text-teal-600">
-              Challan 281
-            </span>
-          </div>
-          <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">₹6.42 Lakhs</p>
-          <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">TDS Remitted Last Month</p>
-          <p className="mt-2 text-[10px] text-[var(--text-subtle)]">100% matched against Form 26AS</p>
-        </article>
-
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between">
-            <span className="grid size-10 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
-              <ShieldCheck size={18} />
-            </span>
-            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-semibold text-blue-600">
-              Compliant
-            </span>
-          </div>
-          <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">12A & 80G</p>
-          <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">Income Tax Exemption Status</p>
-          <p className="mt-2 text-[10px] text-[var(--text-subtle)]">Valid through FY 2028-29</p>
-        </article>
-
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between">
-            <span className="grid size-10 place-items-center rounded-xl bg-purple-500/10 text-purple-600">
-              <Calendar size={18} />
-            </span>
-            <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[9px] font-semibold text-purple-600">
-              Next Deadline
-            </span>
-          </div>
-          <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">07 Oct 2026</p>
-          <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">TDS Challan Filing Due</p>
-          <p className="mt-2 text-[10px] text-[var(--text-subtle)]">September withholding remittance</p>
-        </article>
+      <section aria-label="Taxation summary" className="grid gap-4 md:grid-cols-3">
+        {monitors.map(({ id, label, icon: Icon, value, detail }) => <article key={id} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--surface-soft)] text-[var(--brand-primary)]"><Icon size={18} aria-hidden="true" /></span><h3 className="text-sm font-medium text-[var(--text-muted)]">{label}</h3></div>
+          <p className="mt-5 text-2xl font-semibold tracking-tight text-[var(--text)]">{value}</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--text-subtle)]">{detail}</p>
+        </article>)}
       </section>
 
-      {/* Tabs */}
-      <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-2 shadow-[var(--shadow-card)]">
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("gst")}
-            className={cn(
-              "focus-ring flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition",
-              activeTab === "gst"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/15"
-                : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
-            )}
-          >
-            <Scale size={15} /> Goods & Services Tax (GST)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("tds")}
-            className={cn(
-              "focus-ring flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition",
-              activeTab === "tds"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/15"
-                : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
-            )}
-          >
-            <CreditCard size={15} /> TDS Challans & ITNS 281
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("fcra")}
-            className={cn(
-              "focus-ring flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition",
-              activeTab === "fcra"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/15"
-                : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
-            )}
-          >
-            <ShieldCheck size={15} /> 12A / 80G & FCRA Exemptions
-          </button>
-        </div>
-      </section>
+      <nav aria-label="Taxation monitoring views" className="grid gap-2 rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-2 sm:grid-cols-3">
+        {monitors.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-pressed={activeTab === id} onClick={() => setActiveTab(id)} className={cn("focus-ring flex min-h-12 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold transition", activeTab === id ? "border-[var(--brand-primary)] bg-[var(--surface-soft)] text-[var(--brand-primary)]" : "border-transparent text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}><Icon size={16} aria-hidden="true" />{label}</button>)}
+      </nav>
 
       {/* Tab Content */}
       {activeTab === "gst" && (
         <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--text)]">GST Return Filings Schedule</h3>
+              <h3 className="text-sm font-semibold text-[var(--text)]">GST filing register</h3>
               <p className="text-[10px] text-[var(--text-subtle)]">
                 Pantiss Foundation · GSTIN: 21AAATP1049M1Z3 (Odisha Jurisdiction)
               </p>
             </div>
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold text-emerald-600">
-              Good Compliance Standing
+              {filedReturns.length} filed · {gstRecords.length - filedReturns.length} pending
             </span>
           </div>
 
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[850px] text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--border)] text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">
                   <th className="pb-3 pl-3">Return Type</th>
                   <th className="pb-3">Period</th>
                   <th className="pb-3">Due Date</th>
-                  <th className="pb-3">ARN Reference</th>
+                  <th className="pb-3">Filed Date</th><th className="pb-3">ARN Reference</th>
                   <th className="pb-3 text-right">Taxable Turnover</th>
-                  <th className="pb-3 text-right">Input Tax Credit</th>
+                  <th className="pb-3 text-right">ITC Claimed</th>
                   <th className="pb-3 text-right">Cash Paid</th>
-                  <th className="pb-3 text-center">Status</th>
+                  <th className="pb-3 text-center">Status</th><th className="pb-3 pl-3">Filing & document</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)] text-[var(--text)]">
@@ -329,28 +247,32 @@ export function TaxationView() {
                     <td className="py-3.5 pl-3 font-bold text-[var(--text)]">{r.returnType}</td>
                     <td className="py-3.5 font-medium">{r.period}</td>
                     <td className="py-3.5 text-[var(--text-muted)]">{r.dueDate}</td>
-                    <td className="py-3.5 font-mono text-[10px] text-[var(--text-subtle)]">
+                    <td className="py-3.5 text-[var(--text-muted)]">{r.filedDate ?? "—"}</td><td className="py-3.5 font-mono text-[10px] text-[var(--text-subtle)]">
                       {r.arn ?? "—"}
                     </td>
-                    <td className="py-3.5 text-right font-medium">{formatCurrency(r.turnover)}</td>
+                    <td className="py-3.5 text-right font-medium">{formatCurrency(r.turnover, true)}</td>
                     <td className="py-3.5 text-right font-medium text-emerald-600">
-                      {r.itcClaimed ? formatCurrency(r.itcClaimed) : "—"}
+                      {r.returnType === "GSTR-3B" && r.filedDate ? formatCurrency(r.itcClaimed, true) : "—"}
                     </td>
                     <td className="py-3.5 text-right font-bold">
-                      {r.netPaidCash ? formatCurrency(r.netPaidCash) : "—"}
+                      {r.returnType === "GSTR-3B" && r.filedDate ? formatCurrency(r.netPaidCash, true) : "—"}
                     </td>
                     <td className="py-3.5 text-center">
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-semibold",
-                          r.status === "Filed on Time"
+                          r.filedDate
                             ? "bg-emerald-500/10 text-emerald-600"
                             : "bg-blue-500/10 text-blue-600"
                         )}
                       >
-                        {r.status === "Filed on Time" ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+                        {r.filedDate ? <CheckCircle2 size={10} /> : <Clock size={10} />}
                         {r.status}
                       </span>
+                    </td>
+                    <td className="py-3.5 pl-3 max-w-[220px]">
+                      {filingButton({ id: `${r.returnType}-${r.period}`, title: `${r.returnType} · ${r.period}`, reference: r.arn, filedDate: r.filedDate ? (r.filedDate.includes("-") ? r.filedDate : new Date(`${r.filedDate} UTC`).toISOString().slice(0, 10)) : undefined })}
+                      {filings[`${r.returnType}-${r.period}`] && <FilingDocument filing={filings[`${r.returnType}-${r.period}`]} />}
                     </td>
                   </tr>
                 ))}
@@ -362,18 +284,29 @@ export function TaxationView() {
 
       {activeTab === "tds" && (
         <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--text)]">TDS Challan ITNS-281 Register</h3>
+              <h3 className="text-sm font-semibold text-[var(--text)]">TDS filing (total)</h3>
               <p className="text-[10px] text-[var(--text-subtle)]">
                 TAN: BBNP10928M · Remitted directly through State Bank of India
               </p>
             </div>
-            <span className="text-xs text-[var(--text-subtle)]">Quarterly Form 24Q & 26Q compliant</span>
+            <span className="text-xs text-[var(--text-subtle)]">{["24Q", "26Q"].filter((form) => filings[`TDS-${form}-Q2-2026-27`]).length} / 2 returns filed</span>
           </div>
 
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[{ label: "Total TDS in register", value: totalTds }, { label: "Paid & reconciled", value: paidTds }, { label: "Scheduled payment", value: totalTds - paidTds }].map((item) => <div key={item.label} className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><p className="text-xs text-[var(--text-muted)]">{item.label}</p><p className="mt-2 text-xl font-semibold text-[var(--text)]">{rupees(item.value)}</p></div>)}
+          </div>
+          <h4 className="mt-6 text-sm font-semibold text-[var(--text)]">Return-filing status · Q2 FY 2026–27</h4>
+          <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">Totals cover the August and September challans listed below. July data has not been provided. Update each return with its filing acknowledgement.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">{["24Q", "26Q"].map((form) => {
+            const records = tdsChallans.filter((record) => form === "24Q" ? record.section === "192 (Salaries)" : record.section !== "192 (Salaries)");
+            const filing = filings[`TDS-${form}-Q2-2026-27`];
+            return <article key={form} className="rounded-xl border border-[var(--border)] p-4"><h5 className="text-sm font-semibold text-[var(--text)]">Form {form} · {form === "24Q" ? "Salaries" : "Non-salary"}</h5><p className="mt-2 text-lg font-semibold text-[var(--text)]">{rupees(records.reduce((sum, record) => sum + record.amount, 0))}</p><p className="mt-2 text-xs text-[var(--text-muted)]">Filing status: {filing ? "Filed" : "Not verified"}</p><p className="mt-1 text-xs text-[var(--text-subtle)]">Acknowledgement: {filing?.reference ?? "Not available"}</p>{filing && <p className="mt-1 text-xs text-[var(--text-muted)]">Filed on {filing.filedDate}</p>}{filingButton({ id: `TDS-${form}-Q2-2026-27`, title: `Form ${form} · Q2 FY 2026–27` })}{filing && <FilingDocument filing={filing} />}</article>;
+          })}</div>
+          <h4 className="mt-6 text-sm font-semibold text-[var(--text)]">Supporting challan register</h4>
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[850px] text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--border)] text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">
                   <th className="pb-3 pl-3">Challan ID & Month</th>
@@ -381,7 +314,7 @@ export function TaxationView() {
                   <th className="pb-3">BSR Code</th>
                   <th className="pb-3">Challan No.</th>
                   <th className="pb-3">Tender Date</th>
-                  <th className="pb-3 text-right">Tax Deducted & Paid</th>
+                  <th className="pb-3 text-right">TDS Amount</th>
                   <th className="pb-3 text-center">Status</th>
                 </tr>
               </thead>
@@ -420,51 +353,17 @@ export function TaxationView() {
         </section>
       )}
 
-      {activeTab === "fcra" && (
-        <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] space-y-6">
-          <div className="border-b border-[var(--border)] pb-4">
-            <h3 className="text-base font-semibold text-[var(--text)]">
-              Tax Exemption & Non-Profit Statutory Certifications
-            </h3>
-            <p className="text-xs text-[var(--text-subtle)]">
-              Registered charitable foundation exemptions under Indian Income Tax Act 1961
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-600">
-                12A CERTIFICATE
-              </span>
-              <h4 className="mt-3 text-sm font-bold text-[var(--text)]">Tax Exemption on Income</h4>
-              <p className="mt-1 font-mono text-xs text-[var(--text-subtle)]">URN: AABTP1049ME20214</p>
-              <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
-                Exempts foundation from corporate income tax under Section 12AA/12AB. Valid through Assessment Year 2029-30.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
-              <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-[9px] font-bold text-blue-600">
-                80G CERTIFICATE
-              </span>
-              <h4 className="mt-3 text-sm font-bold text-[var(--text)]">Donor 50% Tax Deduction</h4>
-              <p className="mt-1 font-mono text-xs text-[var(--text-subtle)]">URN: AABTP1049MF20215</p>
-              <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
-                Allows corporate and individual CSR donors to claim 50% tax deductions on all contributions. Annual Form 10BD filed.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
-              <span className="rounded-full bg-purple-500/10 px-2.5 py-1 text-[9px] font-bold text-purple-600">
-                FCRA DESIGNATED
-              </span>
-              <h4 className="mt-3 text-sm font-bold text-[var(--text)]">Foreign Contribution Regulation</h4>
-              <p className="mt-1 font-mono text-xs text-[var(--text-subtle)]">FCRA Reg: 104928192</p>
-              <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
-                SBI New Delhi Main Branch designated FCRA account active. Annual Form FC-4 returns audited and filed.
-              </p>
-            </div>
-          </div>
+      {activeTab === "itc" && (
+        <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <h3 className="text-base font-semibold text-[var(--text)]">Input tax credit tracking</h3>
+          <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">Monthly GSTR-3B credits, separated into claimed and proposed amounts. Annual returns and GSTR-1 are excluded from credit totals to avoid double counting.</p>
+          <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[700px] text-left text-xs">
+            <caption className="sr-only">Monthly input tax credit claims and reconciliation status</caption>
+            <thead className="border-b border-[var(--border)] text-[var(--text-subtle)]"><tr>{["Period", "Claimed ITC", "Proposed ITC", "Claim status", "GSTR-2B reconciliation"].map((heading) => <th scope="col" key={heading} className="px-3 py-3 font-medium">{heading}</th>)}</tr></thead>
+            <tbody className="divide-y divide-[var(--border)] text-[var(--text)]">{creditRecords.map((record) => <tr key={record.period}><td className="px-3 py-4 font-medium">{record.period}</td><td className="px-3 py-4">{formatCurrency(record.filedDate ? record.itcClaimed : 0, true)}</td><td className="px-3 py-4">{formatCurrency(record.filedDate ? 0 : record.itcClaimed, true)}</td><td className="px-3 py-4">{record.filedDate ? "Claimed in filed return" : "Not yet claimed"}</td><td className="px-3 py-4 text-[var(--text-muted)]">Awaiting reconciliation data</td></tr>)}</tbody>
+            <tfoot className="border-t border-[var(--border)] text-[var(--text)]"><tr><th scope="row" className="px-3 py-4">Total</th><td className="px-3 py-4 font-semibold">{formatCurrency(claimedCredit, true)}</td><td className="px-3 py-4 font-semibold">{formatCurrency(pendingCredit, true)}</td><td colSpan={2} /></tr></tfoot>
+          </table></div>
+          <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-xs leading-5 text-[var(--text-muted)]">Invoice-level matching, eligible credit and mismatches are awaiting purchase-register and GSTR-2B data.</p>
         </section>
       )}
     </div>

@@ -282,3 +282,163 @@ export function budgetPdfFilename(data: BudgetPdfData) {
   const slug = `${data.projectId}-${data.title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   return `${slug || "project-budget"}.pdf`;
 }
+
+export function budgetSummaryPdfFilename(data: BudgetPdfData) {
+  const slug = `${data.projectId}-budget-summary`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${slug || "budget-summary"}.pdf`;
+}
+
+/**
+ * Generates a clean, one-page Budget Allocation Summary PDF showing:
+ * project name, thematic area, fiscal year, and a table of each cost head
+ * with its allocated amount and percentage share of total.
+ */
+export async function createBudgetSummaryPdf(data: BudgetPdfData) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
+
+  const total = data.lines.reduce((sum, line) => sum + line.quantity * line.rate, 0);
+
+  // ── Cover band ──────────────────────────────────────────────────────────────
+  doc.setFillColor(...dark);
+  doc.rect(0, 0, 210, 42, "F");
+  doc.setFillColor(...emerald);
+  doc.rect(0, 0, 6, 42, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text("PANTISS", 14, 14);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(167, 243, 208);
+  doc.text("FINANCE DIVISION  |  BUDGET ALLOCATION SUMMARY", 14, 20);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(255, 255, 255);
+  const titleLines = doc.splitTextToSize(data.projectName, 150) as string[];
+  doc.text(titleLines, 14, 32);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(148, 163, 184);
+  doc.text(`${data.fiscalYear}  ·  ${data.projectId}  ·  Status: ${data.status}`, 194, 38, { align: "right" });
+
+  // ── Meta info strip ─────────────────────────────────────────────────────────
+  const metaY = 50;
+  const metaItems: [string, string][] = [
+    ["Thematic area", data.thematicArea],
+    ["Funding source", data.fundingSource],
+    ["Currency", data.currency],
+    ["Prepared", data.created],
+  ];
+  metaItems.forEach(([label, value], i) => {
+    const x = 14 + i * 47;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.setTextColor(...slate);
+    doc.text(label.toUpperCase(), x, metaY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...dark);
+    doc.text(doc.splitTextToSize(value, 40) as string[], x, metaY + 5);
+  });
+
+  // ── Section heading ─────────────────────────────────────────────────────────
+  const tableStartY = 72;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...dark);
+  doc.text("Budget allocation by cost head", 14, tableStartY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...slate);
+  doc.text(`${data.lines.length} cost heads  ·  Total: ${money(total)}`, 14, tableStartY + 6);
+
+  // ── Table header ─────────────────────────────────────────────────────────────
+  const headerY = tableStartY + 12;
+  doc.setFillColor(15, 23, 42);
+  doc.rect(14, headerY, 182, 8, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text("COST HEAD", 18, headerY + 5.2);
+  doc.text("ALLOCATED AMOUNT", 148, headerY + 5.2, { align: "right" });
+  doc.text("% OF TOTAL", 193, headerY + 5.2, { align: "right" });
+
+  // ── Table rows ────────────────────────────────────────────────────────────────
+  let rowY = headerY + 8;
+  data.lines.forEach((line, index) => {
+    const amount = line.quantity * line.rate;
+    const pct = total > 0 ? ((amount / total) * 100).toFixed(1) : "0.0";
+    const isEven = index % 2 === 0;
+
+    if (isEven) {
+      doc.setFillColor(248, 250, 252);
+      doc.rect(14, rowY, 182, 10, "F");
+    }
+
+    // Bar fill representing percentage
+    const barWidth = Math.round((amount / total) * 60);
+    doc.setFillColor(...emerald);
+    doc.rect(14, rowY + 8.5, barWidth, 1.5, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...dark);
+    doc.text(line.name, 18, rowY + 6.2);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...slate);
+    doc.text(money(amount), 148, rowY + 6.2, { align: "right" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...emerald);
+    doc.text(`${pct}%`, 193, rowY + 6.2, { align: "right" });
+
+    rowY += 10;
+  });
+
+  // ── Total row ─────────────────────────────────────────────────────────────────
+  doc.setFillColor(...emerald);
+  doc.rect(14, rowY, 182, 11, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text("TOTAL BUDGET", 18, rowY + 7.2);
+  doc.text(money(total), 148, rowY + 7.2, { align: "right" });
+  doc.text("100.0%", 193, rowY + 7.2, { align: "right" });
+
+  rowY += 18;
+
+  // ── Notes (if any) ────────────────────────────────────────────────────────────
+  if (data.notes && rowY < 250) {
+    doc.setFillColor(240, 253, 244);
+    doc.roundedRect(14, rowY, 182, 28, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...dark);
+    doc.text("NOTES", 19, rowY + 8);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...slate);
+    const noteLines = doc.splitTextToSize(data.notes, 165) as string[];
+    doc.text(noteLines.slice(0, 3), 19, rowY + 15);
+    rowY += 34;
+  }
+
+  // ── Footer ────────────────────────────────────────────────────────────────────
+  doc.setDrawColor(...border);
+  doc.line(14, 283, 196, 283);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text(`Pantiss Finance Division  |  ${data.projectId}  |  Budget allocation summary  |  Internal document`, 14, 288);
+  doc.text("Page 1 of 1", 196, 288, { align: "right" });
+
+  return doc;
+}

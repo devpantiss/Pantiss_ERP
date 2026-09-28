@@ -46,6 +46,9 @@ function PortfolioFinanceDashboard() {
   const watchShare = Math.round((statusCounts.onTrack + statusCounts.watch) / allProjects.length * 100);
   return (
     <div className="space-y-6">
+      <section aria-label="Taxation monitoring" className="grid gap-3 sm:grid-cols-3">
+        {[{ key: "gst", label: "GST filing", detail: "Update returns & upload acknowledgements" }, { key: "itc", label: "Input tax credit tracking", detail: "Review claimed and proposed credits" }, { key: "tds", label: "TDS filing (total)", detail: "Monitor totals & record completed filings" }].map((item) => <button key={item.key} type="button" onClick={() => navigate(`/finance/taxation?view=${item.key}`)} className="focus-ring rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-4 text-left shadow-[var(--shadow-card)] transition hover:bg-[var(--surface-soft)]"><span className="text-sm font-semibold text-[var(--brand-primary)]">{item.label} →</span><span className="mt-2 block text-xs text-[var(--text-muted)]">{item.detail}</span></button>)}
+      </section>
       <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-[0_28px_80px_rgba(5,150,105,.18)] sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
         <div className="absolute right-12 top-8 size-40 rounded-full bg-emerald-300/10 blur-3xl" />

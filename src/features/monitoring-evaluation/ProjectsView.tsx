@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { projects } from "./data";
 import { cn } from "../../utils/cn";
+import { ProjectOnboarding } from "../projects/ProjectOnboarding";
 
 const statusStyles = {
   "On track": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -28,6 +29,7 @@ export function ProjectsView() {
       <section className="flex flex-col justify-between gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6 lg:flex-row lg:items-center">
         <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-red-500">Project portfolio</p><h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">Choose a project to inspect</h2><p className="mt-2 text-sm text-[var(--text-muted)]">Review delivery progress, funding and the latest reported outcome.</p></div>
         <div className="flex flex-wrap gap-2">
+          <ProjectOnboarding areas={areas.slice(1)} />
           <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search projects" className="focus-ring h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] pl-9 pr-3 text-xs text-[var(--text)] outline-none" /></label>
           <label className="relative"><select value={area} onChange={(event) => setArea(event.target.value)} className="focus-ring h-11 appearance-none rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] pl-3 pr-9 text-xs text-[var(--text-muted)] outline-none">{areas.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" /></label>
         </div>

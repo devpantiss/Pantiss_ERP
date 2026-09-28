@@ -33,6 +33,7 @@ const areaDefinitions = [
   { id: "health", name: "Health", shortName: "Health", color: "#e11d48", approved: 320, count: 9 },
   { id: "sanitation", name: "Sanitation", shortName: "WASH", color: "#0891b2", approved: 130, count: 4 },
   { id: "climate-change", name: "Climate Change", shortName: "Climate", color: "#16a34a", approved: 190, count: 5 },
+  { id: "research-analytics", name: "Research & Analytics", shortName: "Research", color: "#7c3aed", approved: 175, count: 6 },
 ] as const;
 
 const projectNames: Record<string, string[]> = {
@@ -43,6 +44,7 @@ const projectNames: Record<string, string[]> = {
   health: ["Swasthya Mobile Clinics", "Community NCD Screening", "Maternal Health Continuum", "Telehealth Access Network", "School Health Initiative", "Tribal Health Outreach", "Vision Care Mission", "Mental Wellbeing Programme", "Referral Strengthening Project"],
   sanitation: ["Jal Suraksha Mission", "School WASH Programme", "Safe Water Communities", "ODF Sustainability Initiative"],
   "climate-change": ["Green Village Resilience", "Watershed Restoration Mission", "Climate-Smart Agriculture", "Community Forestry Partnership", "Local Adaptation Fund"],
+  "research-analytics": ["Household Welfare Survey", "Impact Evaluation Framework", "District Data Dashboard", "Programme Analytics Platform", "Outcome Measurement Study", "Community Needs Assessment"],
 };
 
 const donors = ["NSDC", "Tata Trusts", "Azim Premji Philanthropic Initiatives", "State Government", "HDFC Parivartan", "UNDP", "CSR Consortium"];

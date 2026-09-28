@@ -2,12 +2,6 @@ import { useState, useMemo } from "react";
 import {
   FolderKanban,
   Search,
-  Filter,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Building2,
-  ArrowUpRight,
   Download,
   DollarSign,
   TrendingUp,
@@ -17,6 +11,7 @@ import {
 import { financeAreas, formatCurrency, type FinanceProject } from "./data";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
+import { ProjectOnboarding } from "../projects/ProjectOnboarding";
 
 export function ProjectsView() {
   const [selectedArea, setSelectedArea] = useState<string>("all");
@@ -178,6 +173,7 @@ export function ProjectsView() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <ProjectOnboarding areas={financeAreas.map((area) => area.name)} />
             <div className="relative min-w-[200px]">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" />
               <input

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpRight, Banknote, Building2, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, Clock3, Copy, CreditCard, Download, Eye, FileText, GitCompareArrows, History, House, Paperclip, Plane, Plus, ReceiptText, RotateCcw, Save, Scale, Search, Send, ShieldCheck, ShoppingCart, SlidersHorizontal, Trash2, Upload, UserRound, Utensils, WalletCards, X, Zap } from "lucide-react";
 import { areaTotals, financeAreas, formatCurrency, type FinanceArea, type FinanceProject } from "./data";
-import { budgetPdfFilename, createBudgetPdf, type BudgetPdfData } from "./budgetPdf";
+import { budgetPdfFilename, createBudgetPdf, createBudgetSummaryPdf, budgetSummaryPdfFilename, type BudgetPdfData } from "./budgetPdf";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
 
@@ -142,8 +142,21 @@ function BudgetComparisonModal({ approved, draft, onClose }: { approved: BudgetP
 }
 
 function BudgetPdfActions({ data, onPreview }: { data: BudgetPdfData; onPreview: (data: BudgetPdfData) => void }) {
-  const download = async () => (await createBudgetPdf(data)).save(budgetPdfFilename(data));
-  return <span className="flex items-center gap-1"><button type="button" onClick={() => onPreview(data)} className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--module-bg)] px-2.5 text-[9px] font-semibold text-[var(--text-muted)] hover:text-[var(--text)]"><Eye size={12} />Preview</button><button type="button" onClick={download} className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-[9px] font-semibold text-white hover:bg-emerald-700"><Download size={12} />PDF</button></span>;
+  const downloadFull = async () => (await createBudgetPdf(data)).save(budgetPdfFilename(data));
+  const downloadSummary = async () => (await createBudgetSummaryPdf(data)).save(budgetSummaryPdfFilename(data));
+  return (
+    <span className="flex items-center gap-1">
+      <button type="button" onClick={() => onPreview(data)} className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--module-bg)] px-2.5 text-[9px] font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
+        <Eye size={12} />Preview
+      </button>
+      <button type="button" onClick={() => void downloadSummary()} title="Download budget allocation summary (cost heads + amounts)" className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-teal-600 px-2.5 text-[9px] font-semibold text-white hover:bg-teal-700">
+        <Download size={12} />Summary
+      </button>
+      <button type="button" onClick={() => void downloadFull()} title="Download full detailed budget report" className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-[9px] font-semibold text-white hover:bg-emerald-700">
+        <Download size={12} />Full report
+      </button>
+    </span>
+  );
 }
 
 function BudgetPdfPreview({ data, onClose }: { data: BudgetPdfData; onClose: () => void }) {

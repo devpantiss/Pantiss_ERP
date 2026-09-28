@@ -1,0 +1,36 @@
+:root {
+  --finance-accent: var(--color-emerald-700);
+  --finance-accent-soft: color-mix(in srgb, var(--color-emerald-500) 10%, transparent);
+  --finance-accent-border: color-mix(in srgb, var(--color-emerald-500) 30%, transparent);
+  --finance-hero-start: var(--color-slate-950);
+  --finance-hero-middle: var(--color-emerald-950);
+  --finance-hero-end: var(--color-teal-900);
+  --finance-on-hero: var(--color-white);
+}
+.dark {
+  --finance-accent: var(--color-emerald-400);
+}
+.finance-audit .focus-ring:focus-visible {
+  outline-color: var(--finance-accent);
+}
+.finance-audit-hero {
+  color: var(--finance-on-hero);
+  background: linear-gradient(135deg, var(--finance-hero-start), var(--finance-hero-middle), var(--finance-hero-end));
+}
+.finance-audit-card:hover {
+  border-color: var(--finance-accent-border);
+}
+.finance-audit-event {
+  position: relative;
+}
+.finance-audit-event::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 21px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--finance-accent);
+  box-shadow: 0 0 0 4px var(--module-bg);
+}

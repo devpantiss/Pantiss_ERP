@@ -127,7 +127,7 @@ export default function FinancePage() {
     : section === "taxation"
     ? "Statutory taxation & GST / TDS"
     : section === "audit-trails"
-    ? "Immutable financial audit ledger"
+    ? "Project-wise employee invoice audit trail"
     : section === "projects"
     ? "Project finances & grant utilization"
     : section === "approvals"
