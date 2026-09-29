@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpRight, Banknote, Building2, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, Clock3, Copy, CreditCard, Download, Eye, FileText, GitCompareArrows, History, House, Paperclip, Plane, Plus, ReceiptText, RotateCcw, Save, Scale, Search, Send, ShieldCheck, ShoppingCart, SlidersHorizontal, Trash2, Upload, UserRound, Utensils, WalletCards, X, Zap } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpRight, Banknote, Building2, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, Clock3, Copy, CreditCard, Download, Eye, FileText, GitCompareArrows, History, House, Landmark, Paperclip, Plane, Plus, ReceiptText, RotateCcw, Save, Scale, Search, Send, ShieldCheck, ShoppingCart, SlidersHorizontal, Trash2, Upload, UserRound, Utensils, WalletCards, X, Zap } from "lucide-react";
 import { areaTotals, financeAreas, formatCurrency, type FinanceArea, type FinanceProject } from "./data";
 import { budgetPdfFilename, createBudgetPdf, createBudgetSummaryPdf, budgetSummaryPdfFilename, type BudgetPdfData } from "./budgetPdf";
 import { cn } from "../../utils/cn";
@@ -709,8 +709,10 @@ function PaymentAuditOverlay({ record, onClose }: { record: UnifiedPaymentRecord
 export function ProcurementApprovalsView() {
   const [requests, setRequests] = useState(readProcurementRequests);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"All" | ProcurementStatus>("All");
   const [paymentWorkspace, setPaymentWorkspace] = useState(false);
+  // Drill-down state
+  const [activeArea, setActiveArea] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<string | null>(null);
   const selected = requests.find((r) => r.id === selectedId) ?? null;
 
   const updateRequest = (updated: ProcurementRequest) =>
@@ -726,226 +728,654 @@ export function ProcurementApprovalsView() {
 
   const sendPO = (req: ProcurementRequest) => {
     updateRequest({ ...req, status: "PO Sent", poSentAt: procurementStamp(),
-      audit: [...req.audit, { action: "Purchase order sent", actor: "Finance Manager", date: procurementStamp(), detail: `${req.purchaseOrderNo} dispatched to vendor via email. Delivery expected within ${req.quotes.find(q => q.id === req.selectedQuoteId)?.deliveryDays ?? "—"} days.` }] });
+      audit: [...req.audit, { action: "Purchase order sent", actor: "Finance Manager", date: procurementStamp(), detail: `${req.purchaseOrderNo} dispatched to vendor via email.` }] });
   };
 
   const sendInvoiceReminder = (req: ProcurementRequest) => {
     updateRequest({ ...req, status: "Invoice Reminder Sent", invoiceReminderSentAt: procurementStamp(),
-      audit: [...req.audit, { action: "Invoice reminder sent", actor: "Accounts Executive", date: procurementStamp(), detail: `Payment reminder sent to ${req.quotes.find(q => q.id === req.selectedQuoteId)?.vendor ?? "vendor"}. Invoice and payment expected.` }] });
+      audit: [...req.audit, { action: "Invoice reminder sent", actor: "Accounts Executive", date: procurementStamp(), detail: `Payment reminder sent to ${req.quotes.find(q => q.id === req.selectedQuoteId)?.vendor ?? "vendor"}.` }] });
   };
 
   if (paymentWorkspace) return <ProcurementPaymentWorkspace requests={requests} areaFilter="All thematic areas" projectFilter="All projects" onAreaFilter={() => {}} onProjectFilter={() => {}} onUpdate={updateRequest} onBack={() => setPaymentWorkspace(false)} />;
 
-  const PIPELINE_STAGES: { label: string; status: ProcurementStatus | "All" }[] = [
-    { label: "All",                    status: "All" },
-    { label: "Quotation Review",       status: "Quotation review" },
-    { label: "Approved",               status: "Approved" },
-    { label: "PO Created",             status: "PO Created" },
-    { label: "PO Sent",                status: "PO Sent" },
-    { label: "Invoice Reminder Sent",  status: "Invoice Reminder Sent" },
-    { label: "Payment Uploaded",       status: "Payment slip uploaded" },
+  const statusConfig: Record<ProcurementStatus, { label: string; pill: string; icon: string }> = {
+    "Quotation review":       { label: "Quotation Review",      pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400",       icon: "🔍" },
+    "Approved":               { label: "Approved",              pill: "bg-amber-500/10 text-amber-600 dark:text-amber-400",     icon: "✅" },
+    "PO Created":             { label: "PO Created",            pill: "bg-violet-500/10 text-violet-600 dark:text-violet-400",  icon: "📄" },
+    "PO Sent":                { label: "PO Sent",               pill: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",        icon: "📨" },
+    "Invoice Reminder Sent":  { label: "Invoice Reminder Sent", pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400",  icon: "🔔" },
+    "Payment slip uploaded":  { label: "Complete",              pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", icon: "🎉" },
+  };
+
+  const summaryStats = [
+    { label: "Total",   value: requests.length },
+    { label: "Pending", value: requests.filter(r => r.status === "Quotation review").length },
+    { label: "Active",  value: requests.filter(r => !["Quotation review", "Payment slip uploaded"].includes(r.status)).length },
+    { label: "Done",    value: requests.filter(r => r.status === "Payment slip uploaded").length },
   ];
 
-  const stageCounts = PIPELINE_STAGES.reduce<Record<string, number>>((acc, s) => {
-    acc[s.status] = s.status === "All" ? requests.length : requests.filter(r => r.status === s.status).length;
-    return acc;
-  }, {});
+  // Build 2-level hierarchy: thematic area → project → requests
+  const hierarchy = Array.from(
+    requests.reduce<Map<string, Map<string, ProcurementRequest[]>>>((areaMap, req) => {
+      if (!areaMap.has(req.thematicArea)) areaMap.set(req.thematicArea, new Map());
+      const projMap = areaMap.get(req.thematicArea)!;
+      projMap.set(req.project, [...(projMap.get(req.project) ?? []), req]);
+      return areaMap;
+    }, new Map()),
+  );
 
-  const visible = requests.filter(r => statusFilter === "All" || r.status === statusFilter);
+  // Resolve current step data
+  const areaProjectMap = activeArea ? (hierarchy.find(([a]) => a === activeArea)?.[1] ?? new Map<string, ProcurementRequest[]>()) : new Map<string, ProcurementRequest[]>();
+  const projectItems  = activeProject ? (areaProjectMap.get(activeProject) ?? []) : [];
+  const areaCol       = AREA_COLOURS[activeArea ?? ""] ?? DEFAULT_COLOUR;
 
-  const statusConfig: Record<ProcurementStatus, { label: string; pill: string; step: number }> = {
-    "Quotation review":        { label: "Quotation Review",       pill: "bg-blue-500/10 text-blue-600 dark:text-blue-400",      step: 1 },
-    "Approved":                { label: "Approved",               pill: "bg-amber-500/10 text-amber-600 dark:text-amber-400",    step: 2 },
-    "PO Created":              { label: "PO Created",             pill: "bg-violet-500/10 text-violet-600 dark:text-violet-400", step: 3 },
-    "PO Sent":                 { label: "PO Sent",                pill: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",       step: 4 },
-    "Invoice Reminder Sent":   { label: "Invoice Reminder Sent",  pill: "bg-orange-500/10 text-orange-600 dark:text-orange-400", step: 5 },
-    "Payment slip uploaded":   { label: "Payment Uploaded",       pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", step: 6 },
-  };
+  // Step indicator: 0 = areas, 1 = projects, 2 = detail
+  const step = activeProject ? 2 : activeArea ? 1 : 0;
+
+  const goToAreas    = () => { setActiveArea(null); setActiveProject(null); };
+  const goToProjects = () => { setActiveProject(null); };
 
   return (
     <div className="space-y-6">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white shadow-xl sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
-        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+        <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]">
               <ShoppingCart size={13} /> Procurement
             </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Procurement pipeline</h2>
-            <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
-              Full lifecycle — from quotation review and approval through purchase order creation, dispatch, invoice follow-up, and payment.
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Procurement tracker</h2>
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/70">
+              Select a thematic area, then a project to view requests and procurement history.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {[
-              { label: "Total requests",  value: requests.length },
-              { label: "Awaiting review", value: requests.filter(r => r.status === "Quotation review").length },
-              { label: "In progress",     value: requests.filter(r => !["Quotation review", "Payment slip uploaded"].includes(r.status)).length },
-              { label: "Completed",       value: requests.filter(r => r.status === "Payment slip uploaded").length },
-            ].map(item => (
-              <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center backdrop-blur">
-                <span className="block text-xl font-bold">{item.value}</span>
-                <span className="mt-0.5 block text-[9px] text-white/65">{item.label}</span>
+            {summaryStats.map(s => (
+              <div key={s.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center backdrop-blur">
+                <span className="block text-xl font-bold">{s.value}</span>
+                <span className="mt-0.5 block text-[9px] text-white/65">{s.label}</span>
               </div>
             ))}
+            <button type="button" onClick={() => setPaymentWorkspace(true)}
+              className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center backdrop-blur transition hover:bg-white/20">
+              <span className="block text-xl font-bold">{requests.filter(r => r.status !== "Quotation review").length}</span>
+              <span className="mt-0.5 block text-[9px] text-white/65">💳 Payments</span>
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Pipeline stepper strip */}
-      <section className="overflow-x-auto rounded-[20px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]">
-        <div className="flex min-w-max items-stretch divide-x divide-[var(--border)]">
-          {PIPELINE_STAGES.slice(1).map((stage, idx) => {
-            const count = stageCounts[stage.status];
-            const active = statusFilter === stage.status;
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-[10px] font-medium">
+        <button type="button" onClick={goToAreas}
+          className={cn("rounded-lg px-2.5 py-1.5 transition",
+            step === 0 ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}>
+          Thematic Areas
+        </button>
+        {step >= 1 && (
+          <>
+            <ChevronRight size={12} className="text-[var(--text-subtle)]" />
+            <button type="button" onClick={goToProjects}
+              className={cn("rounded-lg px-2.5 py-1.5 transition",
+                step === 1 ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}>
+              {activeArea}
+            </button>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <ChevronRight size={12} className="text-[var(--text-subtle)]" />
+            <span className="rounded-lg bg-[var(--brand-primary)] px-2.5 py-1.5 text-white">
+              {activeProject}
+            </span>
+          </>
+        )}
+      </nav>
+
+      {/* Step 0 — Thematic area cards */}
+      {step === 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {hierarchy.map(([area, projectMap]) => {
+            const col = AREA_COLOURS[area] ?? DEFAULT_COLOUR;
+            const allReqs = Array.from(projectMap.values()).flat();
+            const done = allReqs.filter(r => r.status === "Payment slip uploaded").length;
+            const totalValue = allReqs.reduce((s, r) => s + (r.quotes.find(q => q.id === r.selectedQuoteId)?.amount ?? r.budgetCeiling), 0);
             return (
-              <button
-                key={stage.status}
-                type="button"
-                onClick={() => setStatusFilter(stage.status as ProcurementStatus)}
+              <button key={area} type="button" onClick={() => setActiveArea(area)}
                 className={cn(
-                  "flex min-w-[130px] flex-col items-center gap-1 px-4 py-4 text-center text-[10px] font-semibold transition hover:bg-[var(--surface-soft)]",
-                  active ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "text-[var(--text-muted)]"
-                )}
-              >
-                <span className={cn("mb-1 grid size-6 place-items-center rounded-full text-[9px] font-bold",
-                  active ? "bg-emerald-600 text-white" : "bg-[var(--border)] text-[var(--text-muted)]"
-                )}>{idx + 1}</span>
-                {stage.label}
-                <span className={cn("rounded-full px-2 py-0.5 text-[8px]",
-                  count > 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-[var(--border)] text-[var(--text-muted)]"
-                )}>{count}</span>
+                  "group flex flex-col rounded-[22px] border bg-[var(--module-bg)] p-5 text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-lg focus-ring",
+                  col.border,
+                )}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn("grid size-11 shrink-0 place-items-center rounded-2xl text-xl font-bold", col.bg, col.text)}>
+                    {area.charAt(0)}
+                  </span>
+                  <ChevronRight size={16} className="text-[var(--text-subtle)] transition group-hover:translate-x-0.5" />
+                </div>
+                <h3 className="mt-4 text-sm font-semibold text-[var(--text)]">{area}</h3>
+                <p className="mt-1 text-[9px] text-[var(--text-subtle)]">
+                  {projectMap.size} project{projectMap.size !== 1 ? "s" : ""} · {allReqs.length} requests
+                </p>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="mb-1.5 flex justify-between text-[8px] text-[var(--text-subtle)]">
+                      <span>{done}/{allReqs.length} complete</span>
+                      <span>{allReqs.length ? Math.round((done / allReqs.length) * 100) : 0}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
+                      <div className={cn("h-full rounded-full transition-all", col.dot)}
+                        style={{ width: `${allReqs.length ? (done / allReqs.length) * 100 : 0}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
+                  <b className={cn("block text-sm font-semibold", col.text)}>{formatCurrency(totalValue, true)}</b>
+                  <small className="text-[8px] text-[var(--text-subtle)]">total procurement value</small>
+                </div>
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setPaymentWorkspace(true)}
-            className="flex min-w-[130px] flex-col items-center gap-1 bg-blue-500/5 px-4 py-4 text-center text-[10px] font-semibold text-blue-600 transition hover:bg-blue-500/10 dark:text-blue-400"
-          >
-            <span className="mb-1 grid size-6 place-items-center rounded-full bg-blue-600 text-[9px] font-bold text-white">↗</span>
-            Payments<span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[8px]">{requests.filter(r => r.status !== "Quotation review").length}</span>
-          </button>
         </div>
-      </section>
+      )}
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
-          <button type="button" onClick={() => setStatusFilter("All")}
-            className={cn("focus-ring h-8 rounded-lg px-3 text-[9px] font-semibold transition",
-              statusFilter === "All" ? "bg-emerald-600 text-white" : "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-muted)] hover:text-[var(--text)]")}>
-            All ({requests.length})
-          </button>
-        </div>
-        <span className="text-[10px] text-[var(--text-subtle)]">
-          {visible.length} request{visible.length !== 1 ? "s" : ""} shown
-        </span>
-      </div>
-
-      {/* Request list */}
-      <section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]">
-        <div className="border-b border-[var(--border)] px-5 py-4 sm:px-6">
-          <h3 className="text-base font-semibold text-[var(--text)]">Procurement request register</h3>
-          <p className="mt-1 text-xs text-[var(--text-subtle)]">Click any request to review quotations and progress it through the procurement pipeline.</p>
-        </div>
-        <div className="divide-y divide-[var(--border)]">
-          {visible.map((req) => {
-            const selectedQuote = req.quotes.find(q => q.id === req.selectedQuoteId);
-            const cfg = statusConfig[req.status] ?? { label: req.status, pill: "bg-gray-500/10 text-gray-500", step: 0 };
-            return (
-              <article key={req.id} className="flex flex-col gap-4 p-5 hover:bg-[var(--surface-soft)] sm:px-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  {/* Left info */}
-                  <div className="flex items-start gap-4">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                      <ShoppingCart size={18} />
+      {/* Step 1 — Project cards for selected area */}
+      {step === 1 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className={cn("grid size-10 shrink-0 place-items-center rounded-2xl text-lg font-bold", areaCol.bg, areaCol.text)}>
+              {activeArea!.charAt(0)}
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--text)]">{activeArea}</h3>
+              <p className="text-[9px] text-[var(--text-subtle)]">{areaProjectMap.size} project{areaProjectMap.size !== 1 ? "s" : ""} — select one to view requests</p>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from(areaProjectMap).map(([project, items]) => {
+              const done = items.filter(r => r.status === "Payment slip uploaded").length;
+              const totalValue = items.reduce((s, r) => s + (r.quotes.find(q => q.id === r.selectedQuoteId)?.amount ?? r.budgetCeiling), 0);
+              const pending = items.filter(r => r.status === "Quotation review").length;
+              return (
+                <button key={project} type="button" onClick={() => setActiveProject(project)}
+                  className={cn(
+                    "group flex flex-col rounded-[22px] border bg-[var(--module-bg)] p-5 text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-lg focus-ring",
+                    areaCol.border,
+                  )}>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", areaCol.bg, areaCol.text)}>
+                      <Landmark size={16} />
                     </span>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-xs font-semibold text-[var(--text)]">{req.title}</h4>
-                        <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-semibold", cfg.pill)}>{cfg.label}</span>
-                        {req.priority === "High" && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[8px] font-semibold text-red-500">High priority</span>}
-                      </div>
-                      <p className="mt-1 text-[10px] text-[var(--text-subtle)]">{req.id} · {req.project} · {req.requestedBy}</p>
-                      <p className="mt-1.5 text-[9px] text-[var(--text-muted)]">{req.quantity} · Submitted {req.submitted}</p>
-                      {req.purchaseOrderNo && <p className="mt-1 text-[9px] font-semibold text-violet-600 dark:text-violet-400">PO: {req.purchaseOrderNo}</p>}
+                    <ChevronRight size={14} className="mt-1 text-[var(--text-subtle)] transition group-hover:translate-x-0.5" />
+                  </div>
+                  <h4 className="mt-3 text-[11px] font-semibold text-[var(--text)]">{project}</h4>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-[var(--surface-soft)] px-2 py-0.5 text-[8px] text-[var(--text-subtle)]">{items.length} requests</span>
+                    {pending > 0 && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[8px] font-semibold text-blue-600">{pending} pending</span>}
+                    {done > 0 && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[8px] font-semibold text-emerald-600">{done} done</span>}
+                  </div>
+                  <div className="mt-4">
+                    <div className="mb-1.5 flex justify-between text-[8px] text-[var(--text-subtle)]">
+                      <span>Progress</span>
+                      <span>{items.length ? Math.round((done / items.length) * 100) : 0}%</span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--border)]">
+                      <div className={cn("h-full rounded-full transition-all", areaCol.dot)}
+                        style={{ width: `${items.length ? (done / items.length) * 100 : 0}%` }} />
                     </div>
                   </div>
-                  {/* Right: amount + review */}
-                  <div className="flex items-center gap-4 sm:shrink-0">
-                    <span className="text-right">
-                      <b className="block text-sm text-[var(--text)]">{formatCurrency(selectedQuote?.amount ?? req.budgetCeiling, true)}</b>
-                      <small className="text-[8px] text-[var(--text-subtle)]">{selectedQuote ? "Selected value" : "Budget ceiling"}</small>
-                    </span>
-                    <button type="button" onClick={() => setSelectedId(req.id)}
-                      className="focus-ring rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-semibold text-white hover:bg-emerald-700">
-                      Review
-                    </button>
+                  <div className="mt-3 border-t border-[var(--border)] pt-3">
+                    <b className={cn("block text-sm font-semibold", areaCol.text)}>{formatCurrency(totalValue, true)}</b>
+                    <small className="text-[8px] text-[var(--text-subtle)]">total value</small>
                   </div>
-                </div>
-
-                {/* Pipeline action buttons */}
-                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3">
-                  {/* Step indicator */}
-                  <div className="flex items-center gap-1 mr-2">
-                    {[1,2,3,4,5,6].map(step => (
-                      <span key={step} className={cn("size-2 rounded-full",
-                        step < cfg.step ? "bg-emerald-500" : step === cfg.step ? "bg-emerald-600" : "bg-[var(--border)]")} />
-                    ))}
-                    <span className="ml-1 text-[9px] text-[var(--text-muted)]">Step {cfg.step}/6</span>
-                  </div>
-
-                  {/* Action buttons per stage */}
-                  {req.status === "Approved" && (
-                    <button type="button" onClick={() => createPO(req)}
-                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-violet-700">
-                      <FileText size={12} /> Create Purchase Order
-                    </button>
-                  )}
-                  {req.status === "PO Created" && (
-                    <button type="button" onClick={() => sendPO(req)}
-                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-cyan-700">
-                      <Send size={12} /> Send PO to Vendor
-                    </button>
-                  )}
-                  {req.status === "PO Sent" && (
-                    <button type="button" onClick={() => sendInvoiceReminder(req)}
-                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-orange-600">
-                      <Send size={12} /> Send Invoice Reminder
-                    </button>
-                  )}
-                  {(req.status === "Invoice Reminder Sent" || req.status === "PO Sent") && (
-                    <button type="button" onClick={() => setPaymentWorkspace(true)}
-                      className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-1.5 text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
-                      <Upload size={12} /> Go to Payments
-                    </button>
-                  )}
-                  {req.status === "Payment slip uploaded" && (
-                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 size={12} /> Payment complete
-                    </span>
-                  )}
-                  {req.status === "Quotation review" && (
-                    <span className="text-[9px] text-[var(--text-muted)]">Select and approve a quotation to proceed →</span>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-          {visible.length === 0 && (
-            <div className="p-10 text-center">
-              <p className="text-xs font-semibold text-[var(--text)]">No requests in this stage</p>
-              <button type="button" onClick={() => setStatusFilter("All")} className="mt-2 text-[10px] text-emerald-600 hover:underline">View all requests</button>
-            </div>
-          )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </section>
+      )}
+
+      {/* Step 2 — Requests + History tabs for selected project */}
+      {step === 2 && (
+        <ProcurementProjectDetail
+          area={activeArea!}
+          project={activeProject!}
+          items={projectItems}
+          col={areaCol}
+          statusConfig={statusConfig}
+          onSelect={setSelectedId}
+          onCreatePO={createPO}
+          onSendPO={sendPO}
+          onInvoiceReminder={sendInvoiceReminder}
+          onPaymentWorkspace={() => setPaymentWorkspace(true)}
+        />
+      )}
+
       {selected && <ProcurementReviewOverlay request={selected} onUpdate={updateRequest} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
+
+// ─── Shared colour type ───────────────────────────────────────────────────────
+type AreaColour = { bg: string; text: string; border: string; dot: string };
+type StatusCfg  = { label: string; pill: string; icon: string };
+
+const AREA_COLOURS: Record<string, AreaColour> = {
+  "Education":            { bg: "bg-sky-500/10",    text: "text-sky-600 dark:text-sky-400",    border: "border-sky-500/20",    dot: "bg-sky-500" },
+  "Health":               { bg: "bg-rose-500/10",   text: "text-rose-600 dark:text-rose-400",   border: "border-rose-500/20",   dot: "bg-rose-500" },
+  "Livelihood":           { bg: "bg-amber-500/10",  text: "text-amber-600 dark:text-amber-400", border: "border-amber-500/20",  dot: "bg-amber-500" },
+  "Research & Analytics": { bg: "bg-violet-500/10", text: "text-violet-600 dark:text-violet-400",border: "border-violet-500/20",dot: "bg-violet-500" },
+  "Governance":           { bg: "bg-teal-500/10",   text: "text-teal-600 dark:text-teal-400",   border: "border-teal-500/20",   dot: "bg-teal-500" },
+};
+const DEFAULT_COLOUR: AreaColour = { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-500" };
+
+// ─── Step 2: Full project detail with Requests | History tabs ─────────────────
+function ProcurementProjectDetail({
+  area, project, items, col, statusConfig, onSelect, onCreatePO, onSendPO, onInvoiceReminder, onPaymentWorkspace,
+}: {
+  area: string;
+  project: string;
+  items: ProcurementRequest[];
+  col: AreaColour;
+  statusConfig: Record<ProcurementStatus, StatusCfg>;
+  onSelect: (id: string) => void;
+  onCreatePO: (req: ProcurementRequest) => void;
+  onSendPO: (req: ProcurementRequest) => void;
+  onInvoiceReminder: (req: ProcurementRequest) => void;
+  onPaymentWorkspace: () => void;
+}) {
+  const [tab, setTab] = useState<"requests" | "history">("requests");
+  const totalValue = items.reduce((s, r) => s + (r.quotes.find(q => q.id === r.selectedQuoteId)?.amount ?? r.budgetCeiling), 0);
+  const done = items.filter(r => r.status === "Payment slip uploaded").length;
+  const totalAuditEvents = items.reduce((s, r) => s + r.audit.length, 0);
+
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]">
+      {/* Project header */}
+      <div className={cn("border-b px-5 py-5 sm:px-6", `border-[var(--border)] bg-[var(--surface-soft)]`)}>
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <span className={cn("grid size-11 shrink-0 place-items-center rounded-2xl", col.bg, col.text)}>
+              <Landmark size={18} />
+            </span>
+            <div>
+              <p className={cn("text-[9px] font-semibold uppercase tracking-wide", col.text)}>{area}</p>
+              <h3 className="mt-0.5 text-base font-semibold text-[var(--text)]">{project}</h3>
+              <p className="mt-0.5 text-[9px] text-[var(--text-subtle)]">
+                {items.length} request{items.length !== 1 ? "s" : ""} · {done}/{items.length} complete
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="mb-1.5 flex justify-between text-[8px] text-[var(--text-subtle)]">
+                <span>Progress</span>
+                <span>{items.length ? Math.round((done / items.length) * 100) : 0}%</span>
+              </div>
+              <div className="h-1.5 w-32 overflow-hidden rounded-full bg-[var(--border)]">
+                <div className={cn("h-full rounded-full transition-all", col.dot)}
+                  style={{ width: `${items.length ? (done / items.length) * 100 : 0}%` }} />
+              </div>
+            </div>
+            <div className="text-right">
+              <b className="block text-lg font-semibold text-[var(--text)]">{formatCurrency(totalValue, true)}</b>
+              <small className="text-[8px] text-[var(--text-subtle)]">total value</small>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="mt-4 flex gap-1 rounded-xl bg-[var(--module-bg)] p-1">
+          {(["requests", "history"] as const).map(t => (
+            <button key={t} type="button" onClick={() => setTab(t)}
+              className={cn(
+                "flex-1 rounded-lg py-2 text-[10px] font-semibold transition",
+                tab === t
+                  ? cn("bg-[var(--surface-soft)] text-[var(--text)] shadow-sm")
+                  : "text-[var(--text-subtle)] hover:text-[var(--text-muted)]",
+              )}>
+              {t === "requests" ? `📋 Requests (${items.length})` : `🕐 History (${totalAuditEvents} events)`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab body */}
+      {tab === "requests" ? (
+        <div className="divide-y divide-[var(--border)]">
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+              <ShoppingCart size={22} className="text-[var(--text-subtle)]" />
+              <p className="text-xs font-semibold text-[var(--text)]">No requests yet</p>
+            </div>
+          ) : items.map(req => (
+            <ProcurementRequestRow
+              key={req.id}
+              req={req}
+              statusConfig={statusConfig}
+              onSelect={onSelect}
+              onCreatePO={onCreatePO}
+              onSendPO={onSendPO}
+              onInvoiceReminder={onInvoiceReminder}
+              onPaymentWorkspace={onPaymentWorkspace}
+            />
+          ))}
+        </div>
+      ) : (
+        /* History tab — per-request cards with bill + audit trail */
+        items.length === 0 || totalAuditEvents === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <History size={24} className="text-[var(--text-subtle)]" />
+            <div>
+              <p className="text-xs font-semibold text-[var(--text)]">No history yet</p>
+              <p className="mt-1 text-[9px] text-[var(--text-muted)]">Audit events will appear here as requests progress.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-[var(--border)]">
+            {items.map(req => (
+              <ProcurementHistoryCard key={req.id} req={req} statusConfig={statusConfig} />
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+// ─── Expandable request row (Requests tab) ─────────────────────────────────────
+function ProcurementRequestRow({
+  req, statusConfig, onSelect, onCreatePO, onSendPO, onInvoiceReminder, onPaymentWorkspace,
+}: {
+  req: ProcurementRequest;
+  statusConfig: Record<ProcurementStatus, StatusCfg>;
+  onSelect: (id: string) => void;
+  onCreatePO: (req: ProcurementRequest) => void;
+  onSendPO: (req: ProcurementRequest) => void;
+  onInvoiceReminder: (req: ProcurementRequest) => void;
+  onPaymentWorkspace: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const quote = req.quotes.find(q => q.id === req.selectedQuoteId);
+  const cfg = statusConfig[req.status] ?? { label: req.status, pill: "bg-gray-500/10 text-gray-500", icon: "•" };
+  const lowest = Math.min(...req.quotes.map(q => q.amount));
+
+  return (
+    <div className="transition hover:bg-[var(--surface-soft)]">
+      {/* Main row */}
+      <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--surface-soft)] text-base">{cfg.icon}</span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate text-xs font-semibold text-[var(--text)]">{req.title}</span>
+              <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-semibold", cfg.pill)}>{cfg.label}</span>
+              {req.priority === "High" && <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[8px] font-semibold text-red-500">High</span>}
+            </div>
+            <p className="mt-0.5 text-[9px] text-[var(--text-subtle)]">{req.id} · {req.requestedBy} · {req.submitted}</p>
+            {req.purchaseOrderNo && <p className="mt-1 text-[9px] font-semibold text-violet-600 dark:text-violet-400">PO: {req.purchaseOrderNo}</p>}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="text-right">
+            <b className="block text-sm text-[var(--text)]">{formatCurrency(quote?.amount ?? req.budgetCeiling, true)}</b>
+            <small className="text-[8px] text-[var(--text-subtle)]">{quote ? "selected" : "ceiling"}</small>
+          </span>
+          {req.status === "Quotation review" && (
+            <button type="button" onClick={() => onSelect(req.id)}
+              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-[10px] font-semibold text-white hover:bg-emerald-700">
+              <Scale size={11} /> Review
+            </button>
+          )}
+          {req.status === "Approved" && (
+            <button type="button" onClick={() => onCreatePO(req)}
+              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-violet-600 px-3 text-[10px] font-semibold text-white hover:bg-violet-700">
+              <FileText size={11} /> Create PO
+            </button>
+          )}
+          {req.status === "PO Created" && (
+            <button type="button" onClick={() => onSendPO(req)}
+              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-cyan-600 px-3 text-[10px] font-semibold text-white hover:bg-cyan-700">
+              <Send size={11} /> Send PO
+            </button>
+          )}
+          {req.status === "PO Sent" && (
+            <button type="button" onClick={() => onInvoiceReminder(req)}
+              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg bg-orange-500 px-3 text-[10px] font-semibold text-white hover:bg-orange-600">
+              <Send size={11} /> Invoice Reminder
+            </button>
+          )}
+          {req.status === "Invoice Reminder Sent" && (
+            <button type="button" onClick={onPaymentWorkspace}
+              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
+              <Upload size={11} /> Upload Payment
+            </button>
+          )}
+          {req.status === "Payment slip uploaded" && (
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={11} /> Complete
+            </span>
+          )}
+          <button type="button" onClick={() => onSelect(req.id)}
+            className="focus-ring grid size-8 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-subtle)] hover:text-[var(--text)]">
+            <Eye size={14} />
+          </button>
+          {/* Expand/collapse bill + audit */}
+          <button type="button" onClick={() => setExpanded(e => !e)}
+            className="focus-ring grid size-8 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-subtle)] hover:text-[var(--text)]"
+            aria-expanded={expanded} title={expanded ? "Hide details" : "Show bill & audit trail"}>
+            <ChevronDown size={14} className={cn("transition-transform duration-200", expanded && "rotate-180")} />
+          </button>
+        </div>
+      </div>
+
+      {/* Expandable: Bill + Audit trail */}
+      {expanded && (
+        <div className="border-t border-[var(--border)] bg-[var(--surface-soft)] px-5 pb-5 pt-4 sm:px-6">
+          {/* Bill / Quotation comparison */}
+          <div className="mb-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="grid size-7 place-items-center rounded-lg bg-blue-500/10 text-blue-600"><FileText size={13} /></span>
+              <p className="text-[10px] font-semibold text-[var(--text)]">Quotations &amp; Bill</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {req.quotes.map(q => {
+                const isSelected = q.id === req.selectedQuoteId;
+                const isLowest = q.amount === lowest;
+                return (
+                  <div key={q.id} className={cn(
+                    "rounded-xl border p-4 transition",
+                    isSelected ? "border-emerald-500 bg-emerald-500/[0.06]" : "border-[var(--border)] bg-[var(--module-bg)]"
+                  )}>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <p className="text-[10px] font-semibold text-[var(--text)] leading-tight">{q.vendor}</p>
+                      <div className="flex flex-col gap-1 items-end shrink-0">
+                        {isLowest && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[7px] font-semibold text-blue-600">Lowest</span>}
+                        {isSelected && <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[7px] font-semibold text-white">Selected</span>}
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-[var(--text)]">{formatCurrency(q.amount, true)}</p>
+                    <p className={cn("mt-0.5 text-[8px]", q.amount <= req.budgetCeiling ? "text-emerald-600" : "text-red-500")}>
+                      {q.amount <= req.budgetCeiling
+                        ? `${formatCurrency(req.budgetCeiling - q.amount, true)} below ceiling`
+                        : `${formatCurrency(q.amount - req.budgetCeiling, true)} above ceiling`}
+                    </p>
+                    <dl className="mt-3 grid grid-cols-2 gap-y-2 text-[8px]">
+                      <div><dt className="text-[var(--text-subtle)]">Delivery</dt><dd className="font-semibold text-[var(--text)]">{q.deliveryDays}d</dd></div>
+                      <div><dt className="text-[var(--text-subtle)]">Warranty</dt><dd className="font-semibold text-[var(--text)]">{q.warranty}</dd></div>
+                      <div><dt className="text-[var(--text-subtle)]">Tech score</dt><dd className="font-semibold text-[var(--text)]">{q.technicalScore}/100</dd></div>
+                      <div><dt className="text-[var(--text-subtle)]">GST</dt><dd className="font-semibold text-[var(--text)]">{q.gstIncluded ? "Incl." : "Extra"}</dd></div>
+                    </dl>
+                    <p className="mt-3 truncate text-[7px] text-[var(--text-muted)] opacity-70">{q.file}</p>
+                  </div>
+                );
+              })}
+            </div>
+            {req.paymentSlip && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.05] px-3 py-2.5">
+                <ReceiptText size={13} className="shrink-0 text-emerald-600" />
+                <p className="min-w-0 flex-1 truncate text-[9px] font-semibold text-[var(--text)]">{req.paymentSlip}</p>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[7px] font-semibold text-emerald-600">Payment slip</span>
+              </div>
+            )}
+            {req.purchaseOrderNo && (
+              <div className="mt-2 flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/[0.05] px-3 py-2.5">
+                <FileText size={13} className="shrink-0 text-violet-600" />
+                <p className="text-[9px] font-semibold text-violet-600 dark:text-violet-400">Purchase Order: {req.purchaseOrderNo}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Audit trail */}
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="grid size-7 place-items-center rounded-lg bg-violet-500/10 text-violet-600"><History size={13} /></span>
+              <p className="text-[10px] font-semibold text-[var(--text)]">Audit Trail</p>
+              <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[7px] font-semibold text-violet-600">{req.audit.length} events</span>
+            </div>
+            {req.audit.length === 0 ? (
+              <p className="text-[9px] text-[var(--text-subtle)]">No audit events yet.</p>
+            ) : (
+              <div className="relative space-y-2 pl-6 before:absolute before:bottom-2 before:left-[9px] before:top-2 before:w-px before:bg-[var(--border)]">
+                {[...req.audit].reverse().map((entry, i) => (
+                  <div key={i} className="relative rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3 before:absolute before:-left-[17px] before:top-4 before:size-2.5 before:rounded-full before:border-2 before:border-[var(--surface-soft)] before:bg-emerald-500">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[10px] font-semibold text-[var(--text)]">{entry.action}</p>
+                      <time className="shrink-0 rounded bg-[var(--surface-soft)] px-2 py-0.5 text-[7px] text-[var(--text-subtle)]">{entry.date}</time>
+                    </div>
+                    <p className="mt-1 text-[9px] text-[var(--text-muted)]">{entry.actor} · {entry.detail}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Per-request history card (History tab) ────────────────────────────────────
+function ProcurementHistoryCard({ req, statusConfig }: {
+  req: ProcurementRequest;
+  statusConfig: Record<ProcurementStatus, StatusCfg>;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const quote = req.quotes.find(q => q.id === req.selectedQuoteId);
+  const cfg = statusConfig[req.status] ?? { label: req.status, pill: "bg-gray-500/10 text-gray-500", icon: "•" };
+  const lowest = Math.min(...req.quotes.map(q => q.amount));
+
+  return (
+    <div className="border-b border-[var(--border)] last:border-0">
+      {/* Request header row */}
+      <button type="button" onClick={() => setExpanded(e => !e)}
+        className="flex w-full items-center gap-3 p-5 text-left transition hover:bg-[var(--surface-soft)] sm:px-6">
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-[var(--surface-soft)] text-base">{cfg.icon}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-[11px] font-semibold text-[var(--text)]">{req.title}</span>
+            <span className={cn("rounded-full px-2 py-0.5 text-[7px] font-semibold", cfg.pill)}>{cfg.label}</span>
+          </div>
+          <p className="mt-0.5 text-[8px] text-[var(--text-subtle)]">{req.id} · {req.requestedBy} · {req.submitted} · {req.audit.length} audit events</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="text-right">
+            <b className="block text-sm text-[var(--text)]">{formatCurrency(quote?.amount ?? req.budgetCeiling, true)}</b>
+            <small className="text-[8px] text-[var(--text-subtle)]">{quote ? "selected" : "ceiling"}</small>
+          </span>
+          <ChevronDown size={14} className={cn("text-[var(--text-subtle)] transition-transform duration-200", expanded && "rotate-180")} />
+        </div>
+      </button>
+
+      {/* Expanded: bill + audit */}
+      {expanded && (
+        <div className="bg-[var(--surface-soft)] px-5 pb-5 pt-1 sm:px-6">
+          {/* Bill: selected quote summary + all quotes */}
+          <div className="mb-5 rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <FileText size={13} className="text-blue-600" />
+              <p className="text-[10px] font-semibold text-[var(--text)]">Bill / Quotations</p>
+            </div>
+            {quote ? (
+              <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] px-3 py-2.5">
+                <div>
+                  <p className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400">Selected vendor: {quote.vendor}</p>
+                  <p className="text-[8px] text-[var(--text-subtle)] mt-0.5">{quote.id} · {quote.file}</p>
+                </div>
+                <p className="text-sm font-bold text-[var(--text)]">{formatCurrency(quote.amount, true)}</p>
+              </div>
+            ) : (
+              <p className="mb-3 text-[9px] text-[var(--text-subtle)]">No quote selected yet. Budget ceiling: {formatCurrency(req.budgetCeiling, true)}</p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-3">
+              {req.quotes.map(q => {
+                const isSel = q.id === req.selectedQuoteId;
+                return (
+                  <div key={q.id} className={cn(
+                    "rounded-lg border p-3",
+                    isSel ? "border-emerald-500 bg-emerald-500/[0.04]" : "border-[var(--border)]"
+                  )}>
+                    <div className="flex items-start justify-between gap-1 mb-1.5">
+                      <p className="text-[9px] font-semibold text-[var(--text)] leading-tight">{q.vendor}</p>
+                      <div className="flex gap-1 shrink-0">
+                        {q.amount === lowest && <span className="rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[6px] font-semibold text-blue-600">Low</span>}
+                        {isSel && <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[6px] font-semibold text-white">✓</span>}
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-[var(--text)]">{formatCurrency(q.amount, true)}</p>
+                    <dl className="mt-1.5 grid grid-cols-2 gap-1 text-[7px]">
+                      <div><dt className="text-[var(--text-subtle)]">Delivery</dt><dd className="font-medium text-[var(--text)]">{q.deliveryDays}d</dd></div>
+                      <div><dt className="text-[var(--text-subtle)]">Score</dt><dd className="font-medium text-[var(--text)]">{q.technicalScore}/100</dd></div>
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+            {req.purchaseOrderNo && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/[0.05] px-3 py-2">
+                <FileText size={11} className="shrink-0 text-violet-600" />
+                <p className="text-[8px] font-semibold text-violet-600">PO: {req.purchaseOrderNo}</p>
+              </div>
+            )}
+            {req.paymentSlip && (
+              <div className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.05] px-3 py-2">
+                <ReceiptText size={11} className="shrink-0 text-emerald-600" />
+                <p className="min-w-0 flex-1 truncate text-[8px] font-semibold text-[var(--text)]">{req.paymentSlip}</p>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[7px] font-semibold text-emerald-600">Payment slip</span>
+              </div>
+            )}
+          </div>
+
+          {/* Full audit trail */}
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <History size={13} className="text-violet-600" />
+              <p className="text-[10px] font-semibold text-[var(--text)]">Audit Trail</p>
+              <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[7px] font-semibold text-violet-600">{req.audit.length} events</span>
+            </div>
+            {req.audit.length === 0 ? (
+              <p className="text-[9px] text-[var(--text-subtle)]">No audit events yet.</p>
+            ) : (
+              <div className="relative space-y-2 pl-6 before:absolute before:bottom-2 before:left-[9px] before:top-2 before:w-px before:bg-[var(--border)]">
+                {[...req.audit].reverse().map((entry, i) => (
+                  <div key={i} className="relative rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3 before:absolute before:-left-[17px] before:top-4 before:size-2.5 before:rounded-full before:border-2 before:border-[var(--surface-soft)] before:bg-violet-500">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[10px] font-semibold text-[var(--text)]">{entry.action}</p>
+                      <time className="shrink-0 rounded bg-[var(--surface-soft)] px-2 py-0.5 text-[7px] text-[var(--text-subtle)]">{entry.date}</time>
+                    </div>
+                    <p className="mt-1 text-[9px] text-[var(--text-muted)]">{entry.actor} · {entry.detail}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 function ProcurementPaymentWorkspace({ requests, areaFilter, projectFilter, onAreaFilter, onProjectFilter, onUpdate, onBack }: { requests: ProcurementRequest[]; areaFilter: string; projectFilter: string; onAreaFilter: (value: string) => void; onProjectFilter: (value: string) => void; onUpdate: (request: ProcurementRequest) => void; onBack: () => void }) {
   const eligible = requests.filter((request) => request.status !== "Quotation review");
