@@ -1,0 +1,20 @@
+:root {
+  --salary-accent: var(--color-emerald-700);
+  --salary-accent-soft: color-mix(in srgb, var(--color-emerald-500) 10%, transparent);
+  --salary-warning: var(--color-amber-800);
+  --salary-warning-soft: color-mix(in srgb, var(--color-amber-500) 12%, transparent);
+  --salary-hero-start: var(--color-slate-950);
+  --salary-hero-end: var(--color-emerald-900);
+  --salary-on-hero: var(--color-white);
+}
+.dark {
+  --salary-accent: var(--color-emerald-400);
+  --salary-warning: var(--color-amber-300);
+}
+.salary-hero {
+  color: var(--salary-on-hero);
+  background: linear-gradient(120deg, var(--salary-hero-start), var(--salary-hero-end));
+}
+.salary-workspace .focus-ring:focus-visible {
+  outline-color: var(--salary-accent);
+}
