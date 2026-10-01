@@ -1,29 +1,76 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Receipt,
   Search,
-  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpRight,
+  FolderKanban,
   Plus,
   CheckCircle2,
   Clock,
-  FileText,
-  AlertCircle,
   Paperclip,
   CreditCard,
-  Building2,
-  Calendar,
-  XCircle,
   ShieldCheck,
-  Eye,
-  Download
+  X,
 } from "lucide-react";
-import { financeAreas, formatCurrency } from "./data";
+import { financeAreas } from "./data";
 import { useEmployeeInvoices, type ReimbursementClaim } from "./employeeInvoiceStore";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
 
+import { ClaimBills } from "./ClaimBills";
+import { saveReceipts } from "./receiptStore";
+import "./auditTrail.css";
+
 export function ReimbursementView() {
-  const { claims, setClaims, error: invoiceError } = useEmployeeInvoices();
+  const invoices = useEmployeeInvoices();
+  const [params, setParams] = useSearchParams();
+  const knownProjects = new Set(financeAreas.flatMap((area) => area.projects.map((project) => project.name)));
+  const otherProjects = [...new Set(invoices.claims.filter((claim) => !knownProjects.has(claim.project)).map((claim) => claim.project))];
+  const areas = [...financeAreas, ...(otherProjects.length ? [{ id: "unassigned", name: "Central / unassigned", projects: otherProjects.map((name) => ({ id: name, name })) }] : [])];
+  const area = areas.find((item) => item.id === params.get("area"));
+  const project = area?.projects.find((item) => item.name === params.get("project"));
+  const items = area
+    ? area.projects.map((item) => ({ id: item.id, name: item.name, names: [item.name] }))
+    : areas.map((item) => ({ id: item.id, name: item.name, names: item.projects.map((entry) => entry.name) }));
+
+  return <div className="finance-audit space-y-6">
+    <nav aria-label="Reimbursement navigation" className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+      <button type="button" aria-current={!area ? "page" : undefined} onClick={() => setParams({})} className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]">Thematic areas</button>
+      {area && <><ChevronRight size={14} aria-hidden="true" /><button type="button" aria-current={!project ? "page" : undefined} onClick={() => setParams({ area: area.id })} className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]">{area.name}</button></>}
+      {project && <><ChevronRight size={14} aria-hidden="true" /><span aria-current="page" className="font-medium text-[var(--text)]">{project.name}</span></>}
+    </nav>
+    {project ? <ProjectReimbursements key={project.id} invoices={invoices} projectName={project.name} onBack={() => setParams({ area: area!.id })} /> : <>
+      <section className="flex flex-col justify-between gap-5 rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:flex-row lg:items-center">
+        <div><p className="text-xs font-medium text-[var(--finance-accent)]">Expense reimbursements</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text)]">{area ? `${area.name} projects` : "Select a thematic area"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-muted)]">{area ? "Choose a project to review employee claims, verify receipts and track disbursements." : "Explore thematic areas, then select a project to manage its reimbursements."}</p></div>
+        {area && <button type="button" onClick={() => setParams({})} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text-muted)]"><ChevronLeft size={16} aria-hidden="true" />Back to thematic areas</button>}
+      </section>
+      {invoices.error && <p role="alert" className="text-sm text-[var(--text)]">{invoices.error}</p>}
+      <section aria-label={area ? "Projects" : "Thematic areas"} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => {
+          const claims = invoices.claims.filter((claim) => item.names.includes(claim.project));
+          const pending = claims.filter((claim) => claim.status === "Pending Verification").length;
+          return <button key={item.id} type="button" onClick={() => setParams(area ? { area: area.id, project: item.name } : { area: item.id })} className="focus-ring flex flex-col rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 text-left shadow-[var(--shadow-card)] transition-colors hover:border-[var(--finance-accent-border)] hover:bg-[var(--surface-strong)]">
+            <div className="flex w-full items-center justify-between"><span className="grid size-11 place-items-center rounded-2xl bg-[var(--finance-accent-soft)] text-[var(--finance-accent)]">{area ? <Receipt size={21} aria-hidden="true" /> : <FolderKanban size={21} aria-hidden="true" />}</span><ArrowUpRight size={18} aria-hidden="true" className="text-[var(--text-muted)]" /></div>
+            <h3 className="mt-5 text-lg font-semibold text-[var(--text)]">{item.name}</h3><p className="mt-1 text-sm text-[var(--text-muted)]">{!area && `${item.names.length} projects · `}{claims.length} {claims.length === 1 ? "claim" : "claims"}</p>
+            <dl className="mt-6 grid w-full grid-cols-2 gap-4"><div><dt className="text-xs text-[var(--text-muted)]">Claim value</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">₹{claims.reduce((sum, claim) => sum + claim.amount, 0).toLocaleString("en-IN")}</dd></div><div><dt className="text-xs text-[var(--text-muted)]">Awaiting verification</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">{pending}</dd></div></dl>
+            <span className="mt-5 text-xs font-medium text-[var(--finance-accent)]">{area ? "View reimbursements" : "View projects"}</span>
+          </button>;
+        })}
+      </section>
+    </>}
+  </div>;
+}
+
+function ProjectReimbursements({ invoices, projectName, onBack }: {
+  invoices: ReturnType<typeof useEmployeeInvoices>;
+  projectName: string;
+  onBack: () => void;
+}) {
+  const { claims, setClaims, error: invoiceError } = invoices;
+  const projectClaims = useMemo(() => claims.filter((claim) => claim.project === projectName), [claims, projectName]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -33,15 +80,16 @@ export function ReimbursementView() {
   // New claim form state
   const [claimantName, setClaimantName] = useState("");
   const [empId, setEmpId] = useState("");
-  const [project, setProject] = useState("PMKVY 4.0 Odisha Skills");
-  const [center, setCenter] = useState("Keonjhar Center");
+  const [center, setCenter] = useState("");
   const [category, setCategory] = useState<ReimbursementClaim["category"]>("Inter-District Travel");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptFiles, setReceiptFiles] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const filteredClaims = useMemo(() => {
-    return claims.filter((c) => {
+    return projectClaims.filter((c) => {
       const matchStatus = statusFilter === "all" || c.status === statusFilter;
       const matchCat = categoryFilter === "all" || c.category === categoryFilter;
       const matchSearch =
@@ -50,47 +98,55 @@ export function ReimbursementView() {
         c.project.toLowerCase().includes(searchQuery.toLowerCase());
       return matchStatus && matchCat && matchSearch;
     });
-  }, [claims, statusFilter, categoryFilter, searchQuery]);
+  }, [projectClaims, statusFilter, categoryFilter, searchQuery]);
 
   const stats = useMemo(() => {
-    const pending = claims.filter((c) => c.status === "Pending Verification").length;
-    const approved = claims.filter((c) => c.status === "Finance Approved");
+    const pending = projectClaims.filter((c) => c.status === "Pending Verification").length;
+    const approved = projectClaims.filter((c) => c.status === "Finance Approved");
     const approvedTotal = approved.reduce((acc, curr) => acc + curr.amount, 0);
-    const disbursed = claims.filter((c) => c.status === "Disbursed");
+    const disbursed = projectClaims.filter((c) => c.status === "Disbursed");
     const disbursedTotal = disbursed.reduce((acc, curr) => acc + curr.amount, 0);
     return { pending, approvedCount: approved.length, approvedTotal, disbursedTotal };
-  }, [claims]);
+  }, [projectClaims]);
 
-  const handleCreateClaim = (e: React.FormEvent) => {
+  const handleCreateClaim = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     const amt = parseFloat(amount);
     if (!claimantName || isNaN(amt) || amt <= 0) return;
 
-    const newClaim: ReimbursementClaim = {
-      id: `CLM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-      claimantName: claimantName.trim(),
-      employeeId: empId.trim() || "PAN-EMP-TEMP",
-      project,
-      center,
-      date: new Date().toISOString(),
-      category,
-      amount: amt,
-      billsCount: 1,
-      description: description.trim() || "Out-of-pocket field operational expenses",
-      receiptName: receiptFile?.name || "voucher-receipt.pdf",
-      status: "Pending Verification",
-      managerApproved: true,
-      financeAudited: false
-    };
+    setSaving(true);
+    setAttachmentError("");
+    try {
+      const receipts = await saveReceipts(receiptFiles);
+      const newClaim: ReimbursementClaim = {
+        id: `CLM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+        claimantName: claimantName.trim(),
+        employeeId: empId.trim() || "PAN-EMP-TEMP",
+        project: projectName,
+        center,
+        date: new Date().toISOString(),
+        category,
+        amount: amt,
+        billsCount: receipts.length,
+        receipts,
+        description: description.trim() || "Out-of-pocket field operational expenses",
+        receiptName: receipts.map((receipt) => receipt.name).join(", "),
+        status: "Pending Verification",
+        managerApproved: true,
+        financeAudited: false
+      };
 
-    if (!setClaims([newClaim, ...claims])) return;
-    setShowNewClaimModal(false);
-    // reset form
-    setClaimantName("");
-    setEmpId("");
-    setAmount("");
-    setDescription("");
-    setReceiptFile(null);
+      if (!setClaims([newClaim, ...claims])) return;
+      setShowNewClaimModal(false);
+      // reset form
+      setClaimantName("");
+      setEmpId("");
+      setAmount("");
+      setDescription("");
+      setReceiptFiles([]);
+    } catch { setAttachmentError("Bills could not be saved. Please try again; your claim has not been submitted."); }
+    finally { setSaving(false); }
   };
 
   const handleApproveClaim = (claimId: string) => {
@@ -119,6 +175,7 @@ export function ReimbursementView() {
   return (
     <div className="space-y-6">
       {invoiceError && <p role="alert" className="rounded-xl border border-[var(--border)] p-4 text-sm text-[var(--text)]">{invoiceError}</p>}
+      <button type="button" onClick={onBack} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs text-[var(--text-muted)]"><ChevronLeft size={16} aria-hidden="true" />Back to projects</button>
       {/* Hero Banner */}
       <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-teal-950 to-emerald-900 p-6 text-white shadow-xl sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
@@ -129,7 +186,7 @@ export function ReimbursementView() {
               <Receipt size={13} /> Expense Reimbursement & Travel Advance
             </span>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              Staff Claims & Field Out-of-Pocket Desk
+              {projectName}
             </h2>
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
               Audited employee claims reimbursement pipeline with receipt verification, reporting manager pre-clearance, and automated bank disbursement.
@@ -220,7 +277,7 @@ export function ReimbursementView() {
             <div>
               <h3 className="text-sm font-semibold text-[var(--text)]">Reimbursement Claims Queue</h3>
               <p className="text-[10px] text-[var(--text-subtle)]">
-                Showing {filteredClaims.length} of {claims.length} claims
+                Showing {filteredClaims.length} of {projectClaims.length} claims
               </p>
             </div>
           </div>
@@ -230,6 +287,7 @@ export function ReimbursementView() {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" />
               <input
                 type="search"
+                aria-label="Search claims"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search staff, ID, project..."
@@ -238,6 +296,7 @@ export function ReimbursementView() {
             </div>
 
             <select
+              aria-label="Filter claims by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
@@ -249,6 +308,7 @@ export function ReimbursementView() {
             </select>
 
             <select
+              aria-label="Filter claims by category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
@@ -264,8 +324,8 @@ export function ReimbursementView() {
         </div>
 
         {/* Claims Table */}
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="focus-ring mt-5 overflow-x-auto" role="region" aria-label="Project reimbursement claims" tabIndex={0}>
+          <table className="w-full min-w-[850px] text-left text-xs">
             <thead>
               <tr className="border-b border-[var(--border)] text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">
                 <th className="pb-3 pl-3">Claim ID & Date</th>
@@ -338,6 +398,12 @@ export function ReimbursementView() {
                   </td>
                 </tr>
               ))}
+              {filteredClaims.length === 0 && <tr><td colSpan={8} className="px-4 py-14 text-center">
+                <Receipt size={24} aria-hidden="true" className="mx-auto text-[var(--text-muted)]" />
+                <p className="mt-3 text-sm font-medium text-[var(--text)]">{projectClaims.length ? "No claims match your filters" : "No reimbursements submitted yet"}</p>
+                <p className="mt-2 text-xs text-[var(--text-muted)]">{projectClaims.length ? "Try another search or clear your filters." : "Submit the first expense claim for this project."}</p>
+                {projectClaims.length > 0 && <button type="button" onClick={() => { setSearchQuery(""); setStatusFilter("all"); setCategoryFilter("all"); }} className="focus-ring mt-4 min-h-11 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text)]">Clear filters</button>}
+              </td></tr>}
             </tbody>
           </table>
         </div>
@@ -347,7 +413,7 @@ export function ReimbursementView() {
       {showNewClaimModal && (
         <Overlay
           open
-          onClose={() => setShowNewClaimModal(false)}
+          onClose={() => { if (!saving) setShowNewClaimModal(false); }}
           variant="panel"
           size="lg"
           zIndex={75}
@@ -356,10 +422,11 @@ export function ReimbursementView() {
           description="Submit out-of-pocket expenses incurred during field operations with verified bills."
           footer={
             <div className="flex w-full items-center justify-between">
-              <span className="text-[10px] text-[var(--text-subtle)]">Attached bills will be saved to audit vault</span>
+              <span className="text-[10px] text-[var(--text-subtle)]">Bills are saved in this browser</span>
               <div className="flex gap-2">
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={() => setShowNewClaimModal(false)}
                   className="focus-ring h-10 rounded-xl border border-[var(--border)] px-4 text-xs font-semibold text-[var(--text-muted)]"
                 >
@@ -368,9 +435,10 @@ export function ReimbursementView() {
                 <button
                   type="submit"
                   form="submit-claim-form"
+                  disabled={saving}
                   className="focus-ring h-10 rounded-xl bg-emerald-600 px-5 text-xs font-semibold text-white shadow hover:bg-emerald-700"
                 >
-                  Submit for Approval
+                  {saving ? "Saving bills…" : "Submit for Approval"}
                 </button>
               </div>
             </div>
@@ -405,14 +473,7 @@ export function ReimbursementView() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">Associated Project</label>
-                <select
-                  value={project}
-                  onChange={(e) => setProject(e.target.value)}
-                  className="focus-ring mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
-                >
-                  {financeAreas.map((area) => <optgroup key={area.id} label={area.name}>{area.projects.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</optgroup>)}
-                  <option value="Executive & Core Finance">Executive & Core Finance</option>
-                </select>
+                <input aria-label="Associated project" value={projectName} readOnly className="mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text-muted)]" />
               </div>
 
               <div>
@@ -431,7 +492,7 @@ export function ReimbursementView() {
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">Expense Category</label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as any)}
+                  onChange={(e) => setCategory(e.target.value as ReimbursementClaim["category"])}
                   className="focus-ring mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
                 >
                   <option value="Inter-District Travel">Inter-District Travel</option>
@@ -475,17 +536,32 @@ export function ReimbursementView() {
                 <Paperclip size={18} className="text-emerald-600" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-[var(--text)]">
-                    {receiptFile ? receiptFile.name : "Upload invoice/voucher scans"}
+                    {receiptFiles.length ? `${receiptFiles.length} bills selected · Add more` : "Upload invoice/voucher scans"}
                   </p>
-                  <p className="text-[10px] text-[var(--text-subtle)]">PDF, JPG, PNG up to 10 MB</p>
+                  <p className="text-[10px] text-[var(--text-subtle)]">PDF, JPG, PNG · up to 10 MB per bill</p>
                 </div>
                 <input
                   type="file"
+                  multiple
+                  disabled={saving}
+                  aria-label="Attach bills or receipts"
                   accept=".pdf,.jpg,.jpeg,.png"
                   className="sr-only"
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = "";
+                    if (files.some((file) => !["application/pdf", "image/jpeg", "image/png"].includes(file.type) || file.size > 10 * 1024 * 1024 || file.size === 0)) {
+                      setAttachmentError("Choose non-empty PDF, JPG or PNG files, up to 10 MB each.");
+                      return;
+                    }
+                    setAttachmentError("");
+                    setReceiptFiles((previous) => [...previous, ...files.filter((file) => !previous.some((existing) => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified))]);
+                  }}
                 />
               </label>
+              <ul className="mt-3 space-y-2">{receiptFiles.map((file, index) => <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] p-3"><span className="min-w-0 break-all text-xs text-[var(--text)]">{index + 1}. {file.name}</span><button type="button" disabled={saving} aria-label={`Remove ${file.name}`} onClick={() => setReceiptFiles((files) => files.filter((_, i) => i !== index))} className="focus-ring rounded-lg p-2 text-[var(--text-muted)]"><X size={16} /></button></li>)}</ul>
+              {attachmentError && <p role="alert" className="mt-3 text-xs text-[var(--text)]">{attachmentError}</p>}
+              {invoiceError && <p role="alert" className="mt-3 text-xs text-[var(--text)]">{invoiceError}</p>}
             </div>
           </form>
         </Overlay>
@@ -556,22 +632,7 @@ export function ReimbursementView() {
               <p className="text-xs leading-relaxed text-[var(--text-muted)]">{selectedClaim.description}</p>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText size={20} className="text-emerald-600" />
-                <div>
-                  <p className="text-xs font-bold text-[var(--text)]">{selectedClaim.receiptName}</p>
-                  <p className="text-[10px] text-[var(--text-subtle)]">{selectedClaim.billsCount} scanned receipts attached</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => alert(`Opening ${selectedClaim.receiptName} in PDF viewer.`)}
-                className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-[var(--module-bg)] border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--surface-soft)]"
-              >
-                <Eye size={12} /> View Scan
-              </button>
-            </div>
+            <ClaimBills key={selectedClaim.id} claim={selectedClaim} />
 
             {selectedClaim.bankUtr && (
               <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">

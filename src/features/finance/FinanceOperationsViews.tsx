@@ -395,25 +395,27 @@ const centerExpenseMeta = {
   "TA/DA": { icon: Plane, color: "text-violet-600 bg-violet-500/10" },
 } satisfies Record<CenterExpenseType, { icon: typeof House; color: string }>;
 
-function CenterApprovalsView() {
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+function CenterApprovalsView({ projectName }: { projectName?: string }) {
+  const scopedCenters = centerApprovalProjects.filter(item => !projectName || item.projectName === projectName);
+  const [selectedProjectId, setSelectedProjectId] = useState(projectName ? scopedCenters[0]?.projectId ?? "" : "");
   const [selectedCenterId, setSelectedCenterId] = useState("");
   const [expenseFilter, setExpenseFilter] = useState<"All" | CenterExpenseType>("All");
   const [monthFilter, setMonthFilter] = useState("All months");
   const [reviewRequest, setReviewRequest] = useState<CenterExpenseRequest | null>(null);
-  const projectOptions = [...new Map(centerApprovalProjects.map((item) => [item.projectId, { projectId: item.projectId, projectName: item.projectName }])).values()];
-  const centers = centerApprovalProjects.filter((item) => item.projectId === selectedProjectId);
-  const selected = centerApprovalProjects.find((item) => item.centerId === selectedCenterId) ?? null;
+  const projectOptions = [...new Map(scopedCenters.map((item) => [item.projectId, { projectId: item.projectId, projectName: item.projectName }])).values()];
+  const centers = scopedCenters.filter((item) => item.projectId === selectedProjectId);
+  const selected = scopedCenters.find((item) => item.centerId === selectedCenterId) ?? null;
   const visibleRequests = selected?.requests.filter((request) => (expenseFilter === "All" || request.type === expenseFilter) && (monthFilter === "All months" || request.period === monthFilter)) ?? [];
-  const allRequests = centerApprovalProjects.flatMap((project) => project.requests);
+  const allRequests = scopedCenters.flatMap((project) => project.requests);
   const totalPending = allRequests.reduce((sum, request) => sum + request.amount, 0);
   const selectedTotal = selected?.requests.reduce((sum, request) => sum + request.amount, 0) ?? 0;
   const months = ["All months", ...new Set(selected?.requests.map((request) => request.period) ?? [])];
 
   return <div className="space-y-6">
     <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-700 p-6 text-white sm:p-8"><div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" /><div className="relative"><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]"><Building2 size={13} />Project-wise center approvals</span><h2 className="mt-5 text-3xl font-semibold tracking-[-0.045em]">Center operating expenses</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Review Rental, Food, Electricity and TA/DA requests for every center under its respective project.</p></div></section>
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[{ label: "Projects with requests", value: projectOptions.length }, { label: "Operating centers", value: centerApprovalProjects.length }, { label: "Value awaiting review", value: formatCurrency(totalPending, true) }, { label: "Employee TA/DA bills", value: taDaEmployeeBills.length }].map((item) => <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs text-[var(--text-muted)]">{item.label}</p></article>)}</section>
-    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div className="flex flex-wrap items-center gap-2 text-[9px] font-semibold"><span className="rounded-full bg-emerald-600 px-3 py-1.5 text-white">1 · Project</span><ChevronRight size={13} className="text-[var(--text-ghost)]" /><span className={cn("rounded-full px-3 py-1.5", selectedProjectId ? "bg-emerald-600 text-white" : "bg-[var(--surface-soft)] text-[var(--text-subtle)]")}>2 · Center</span><ChevronRight size={13} className="text-[var(--text-ghost)]" /><span className={cn("rounded-full px-3 py-1.5", selectedCenterId ? "bg-emerald-600 text-white" : "bg-[var(--surface-soft)] text-[var(--text-subtle)]")}>3 · Expense review</span></div><div className="mt-6"><h3 className="text-base font-semibold text-[var(--text)]">First, select a project</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Only centers mapped to the selected project will be shown next.</p></div><div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">{projectOptions.map((project) => { const projectCenters = centerApprovalProjects.filter((item) => item.projectId === project.projectId); const projectTotal = projectCenters.flatMap((item) => item.requests).reduce((sum, request) => sum + request.amount, 0); const active = selectedProjectId === project.projectId; return <button key={project.projectId} type="button" onClick={() => { setSelectedProjectId(project.projectId); setSelectedCenterId(""); setExpenseFilter("All"); setMonthFilter("All months"); }} className={cn("focus-ring rounded-2xl border p-4 text-left transition", active ? "border-emerald-500/40 bg-emerald-500/[0.07] shadow-sm" : "border-[var(--border)] bg-[var(--surface-soft)] hover:border-emerald-500/25")}><div className="flex items-start justify-between"><span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-emerald-600 text-white" : "bg-[var(--module-bg)] text-[var(--text-muted)]")}><FileText size={15} /></span><span className="text-xs font-semibold text-[var(--text)]">{formatCurrency(projectTotal, true)}</span></div><p className="mt-4 text-xs font-semibold text-[var(--text)]">{project.projectName}</p><p className="mt-2 text-[9px] text-[var(--text-subtle)]">{project.projectId} · {projectCenters.length} {projectCenters.length === 1 ? "center" : "centers"}</p></button>; })}</div></section>
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[{ label: "Projects with requests", value: projectOptions.length }, { label: "Operating centers", value: scopedCenters.length }, { label: "Value awaiting review", value: formatCurrency(totalPending, true) }, { label: "Employee TA/DA bills", value: taDaEmployeeBills.filter(bill => scopedCenters.some(center => center.centerId === bill.centerId)).length }].map((item) => <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]">{item.value}</p><p className="mt-1 text-xs text-[var(--text-muted)]">{item.label}</p></article>)}</section>
+    {!projectName && <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><div className="flex flex-wrap items-center gap-2 text-[9px] font-semibold"><span className="rounded-full bg-emerald-600 px-3 py-1.5 text-white">1 · Project</span><ChevronRight size={13} className="text-[var(--text-ghost)]" /><span className={cn("rounded-full px-3 py-1.5", selectedProjectId ? "bg-emerald-600 text-white" : "bg-[var(--surface-soft)] text-[var(--text-subtle)]")}>2 · Center</span><ChevronRight size={13} className="text-[var(--text-ghost)]" /><span className={cn("rounded-full px-3 py-1.5", selectedCenterId ? "bg-emerald-600 text-white" : "bg-[var(--surface-soft)] text-[var(--text-subtle)]")}>3 · Expense review</span></div><div className="mt-6"><h3 className="text-base font-semibold text-[var(--text)]">First, select a project</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Only centers mapped to the selected project will be shown next.</p></div><div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">{projectOptions.map((project) => { const projectCenters = scopedCenters.filter((item) => item.projectId === project.projectId); const projectTotal = projectCenters.flatMap((item) => item.requests).reduce((sum, request) => sum + request.amount, 0); const active = selectedProjectId === project.projectId; return <button key={project.projectId} type="button" onClick={() => { setSelectedProjectId(project.projectId); setSelectedCenterId(""); setExpenseFilter("All"); setMonthFilter("All months"); }} className={cn("focus-ring rounded-2xl border p-4 text-left transition", active ? "border-emerald-500/40 bg-emerald-500/[0.07] shadow-sm" : "border-[var(--border)] bg-[var(--surface-soft)] hover:border-emerald-500/25")}><div className="flex items-start justify-between"><span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-emerald-600 text-white" : "bg-[var(--module-bg)] text-[var(--text-muted)]")}><FileText size={15} /></span><span className="text-xs font-semibold text-[var(--text)]">{formatCurrency(projectTotal, true)}</span></div><p className="mt-4 text-xs font-semibold text-[var(--text)]">{project.projectName}</p><p className="mt-2 text-[9px] text-[var(--text-subtle)]">{project.projectId} · {projectCenters.length} {projectCenters.length === 1 ? "center" : "centers"}</p></button>; })}</div></section>}
+    {projectName && !scopedCenters.length && <p className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-8 text-center text-sm text-[var(--text-muted)]">No center invoices for this project yet.</p>}
     {selectedProjectId && <section className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"><h3 className="text-base font-semibold text-[var(--text)]">Now, choose a center</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Select one operating center to view its monthly expense submissions.</p><div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{centers.map((center) => { const active = selectedCenterId === center.centerId; return <button key={center.centerId} type="button" onClick={() => { setSelectedCenterId(center.centerId); setExpenseFilter("All"); setMonthFilter("All months"); }} className={cn("focus-ring flex items-center gap-4 rounded-2xl border p-4 text-left transition", active ? "border-emerald-500/40 bg-emerald-500/[0.07]" : "border-[var(--border)] bg-[var(--surface-soft)] hover:border-emerald-500/25")}><span className={cn("grid size-11 shrink-0 place-items-center rounded-xl", active ? "bg-emerald-600 text-white" : "bg-[var(--module-bg)] text-[var(--text-muted)]")}><Building2 size={17} /></span><span><b className="block text-xs text-[var(--text)]">{center.centerName}</b><small className="mt-1 block text-[9px] text-[var(--text-subtle)]">{center.centerId} · {center.location}</small></span></button>; })}</div></section>}
     {selected && <section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="flex flex-col justify-between gap-4 border-b border-[var(--border)] p-5 lg:flex-row lg:items-end sm:p-6"><div><p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-600">{selected.projectId} · {selected.centerId}</p><h3 className="mt-2 text-base font-semibold text-[var(--text)]">{selected.centerName}</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">{selected.projectName} · {selected.location} · {formatCurrency(selectedTotal, true)} pending</p></div><div className="flex flex-wrap items-center gap-2"><span className="relative"><CalendarDays size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" /><select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} className="focus-ring h-9 rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] pl-8 pr-8 text-[9px] font-semibold text-[var(--text-muted)]">{months.map((month) => <option key={month}>{month}</option>)}</select></span>{(["All", "Rental", "Food", "Electricity", "TA/DA"] as const).map((type) => <button key={type} type="button" onClick={() => setExpenseFilter(type)} className={cn("focus-ring h-9 rounded-lg px-3 text-[9px] font-semibold transition", expenseFilter === type ? "bg-emerald-600 text-white" : "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text-muted)]")}>{type}</button>)}</div></div><div className="grid gap-px bg-[var(--border)] md:grid-cols-2 xl:grid-cols-4">{visibleRequests.map((request) => { const meta = centerExpenseMeta[request.type]; const Icon = meta.icon; const employeeCount = request.type === "TA/DA" ? taDaEmployeeBills.filter((bill) => bill.centerId === selected.centerId && bill.month === request.period).length : 0; return <article key={request.id} className="bg-[var(--module-bg)] p-5"><div className="flex items-start justify-between"><span className={cn("grid size-10 place-items-center rounded-xl", meta.color)}><Icon size={17} /></span><span className={cn("rounded-full px-2 py-1 text-[8px] font-semibold", request.status === "Ready" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600")}>{request.status}</span></div><p className="mt-5 text-sm font-semibold text-[var(--text)]">{request.type}</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{request.period} · {request.id}</p><p className="mt-4 text-xl font-semibold text-[var(--text)]">{formatCurrency(request.amount, true)}</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{request.type === "TA/DA" ? `${employeeCount} employee claims` : `${request.documents} supporting documents`} · Submitted {request.submitted}</p><button type="button" onClick={() => setReviewRequest(request)} className="focus-ring mt-5 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-[10px] font-semibold text-white hover:bg-emerald-700">{request.type === "TA/DA" ? "Review employee bills" : `Review ${request.type}`}</button></article>; })}{visibleRequests.length === 0 && <div className="col-span-full bg-[var(--module-bg)] p-10 text-center"><p className="text-xs font-semibold text-[var(--text)]">No expense requests found</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">Change the month or expense filter.</p></div>}</div></section>}
     {reviewRequest && selected && (reviewRequest.type === "TA/DA" ? <TaDaReviewModal center={selected} request={reviewRequest} onClose={() => setReviewRequest(null)} /> : <CenterExpenseReviewOverlay center={selected} request={reviewRequest} onClose={() => setReviewRequest(null)} />)}
@@ -761,20 +763,21 @@ function PaymentAuditOverlay({ record, onClose }: { record: UnifiedPaymentRecord
   </Overlay>;
 }
 
-export function ProcurementApprovalsView() {
-  const [requests, setRequests] = useState(readProcurementRequests);
+export function ProcurementApprovalsView({ projectName }: { projectName?: string } = {}) {
+  const [allRequests, setRequests] = useState(readProcurementRequests);
+  const requests = allRequests.filter(request => !projectName || request.project === projectName);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [paymentWorkspace, setPaymentWorkspace] = useState(false);
   const [view, setView] = useState<"requests" | "history">("requests");
   // Drill-down state
-  const [activeArea, setActiveArea] = useState<string | null>(null);
-  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const [activeArea, setActiveArea] = useState<string | null>(requests.find(request => request.project === projectName)?.thematicArea ?? null);
+  const [activeProject, setActiveProject] = useState<string | null>(projectName ?? null);
   const selected = requests.find((r) => r.id === selectedId) ?? null;
 
   const updateRequest = (updated: ProcurementRequest) =>
     setRequests((curr) => curr.map((r) => (r.id === updated.id ? updated : r)));
 
-  useEffect(() => { localStorage.setItem(procurementStorageKey, JSON.stringify(requests)); }, [requests]);
+  useEffect(() => { localStorage.setItem(procurementStorageKey, JSON.stringify(allRequests)); }, [allRequests]);
 
   const createPO = (req: ProcurementRequest) => {
     const poNo = `PO-${req.id.replace("PR-", "")}-${Math.floor(Math.random() * 900 + 100)}`;
@@ -828,8 +831,8 @@ export function ProcurementApprovalsView() {
   // Step indicator: 0 = areas, 1 = projects, 2 = detail
   const step = activeProject ? 2 : activeArea ? 1 : 0;
 
-  const goToAreas    = () => { setActiveArea(null); setActiveProject(null); };
-  const goToProjects = () => { setActiveProject(null); };
+  const goToAreas    = () => { if (!projectName) { setActiveArea(null); setActiveProject(null); } };
+  const goToProjects = () => { if (!projectName) setActiveProject(null); };
 
   return (
     <div className="space-y-6">
@@ -874,7 +877,7 @@ export function ProcurementApprovalsView() {
 
       {view === "history" ? <ProcurementHistory requests={requests} statusConfig={statusConfig} /> : <>
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-[10px] font-medium">
+      {!projectName && <nav className="flex items-center gap-1.5 text-[10px] font-medium">
         <button type="button" onClick={goToAreas}
           className={cn("rounded-lg px-2.5 py-1.5 transition",
             step === 0 ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}>
@@ -898,7 +901,7 @@ export function ProcurementApprovalsView() {
             </span>
           </>
         )}
-      </nav>
+      </nav>}
 
       {/* Step 0 — Thematic area cards */}
       {step === 0 && (
@@ -1793,7 +1796,7 @@ function SalaryApprovalDetailModal({
   );
 }
 
-function SalaryApprovalsQueueView() {
+function SalaryApprovalsQueueView({ projectId }: { projectId?: string }) {
   const { records, approveSalary, rejectSalary, forwardForPayment, forwardMultiple } = useSalaryRecords();
   const { user } = useAuth();
   const [month, setMonth] = useState(payrollMonths[0]);
@@ -1804,7 +1807,7 @@ function SalaryApprovalsQueueView() {
   const [notice, setNotice] = useState<{ message: string; type: "success" | "info" } | null>(null);
 
   // Month-scoped records
-  const monthlyRecords = records.filter(r => r.month === month);
+  const monthlyRecords = records.filter(r => r.month === month && (!projectId || r.projectId === projectId));
   const departments = ["All departments", ...new Set(monthlyRecords.map(r => r.department))];
 
   // Key metrics
@@ -2354,7 +2357,7 @@ function SalaryApprovalsQueueView() {
   );
 }
 
-export function CombinedApprovalsView() {
+export function CombinedApprovalsView({ project }: { project?: { id: string; name: string } } = {}) {
   const [type, setType] = useState<"Center" | "Procurement" | "Salary">("Center");
   return (
     <div className="space-y-6">
@@ -2408,11 +2411,11 @@ export function CombinedApprovalsView() {
         </div>
       </section>
       {type === "Center" ? (
-        <CenterApprovalsView />
+        <CenterApprovalsView projectName={project?.name} />
       ) : type === "Procurement" ? (
-        <ProcurementApprovalsView />
+        <ProcurementApprovalsView projectName={project?.name} />
       ) : (
-        <SalaryApprovalsQueueView />
+        <SalaryApprovalsQueueView projectId={project?.id} />
       )}
     </div>
   );

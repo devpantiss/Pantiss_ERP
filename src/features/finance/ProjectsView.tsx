@@ -6,6 +6,8 @@ import {
   DollarSign,
   TrendingUp,
   FileCheck,
+  ChevronLeft,
+  ArrowUpRight,
   ChevronRight
 } from "lucide-react";
 import { financeAreas, formatCurrency, type FinanceProject } from "./data";
@@ -14,7 +16,7 @@ import { Overlay } from "../../components/ui/Overlay";
 import { ProjectOnboarding } from "../projects/ProjectOnboarding";
 
 export function ProjectsView() {
-  const [selectedArea, setSelectedArea] = useState<string>("all");
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [selectedDonor, setSelectedDonor] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,12 +30,12 @@ export function ProjectsView() {
   }, []);
 
   const donors = useMemo(() => {
-    return ["all", ...new Set(allProjects.map((p) => p.donor))];
-  }, [allProjects]);
+    return ["all", ...new Set(allProjects.filter((p) => p.areaId === selectedArea).map((p) => p.donor))];
+  }, [allProjects, selectedArea]);
 
   const filteredProjects = useMemo(() => {
     return allProjects.filter((p) => {
-      const matchArea = selectedArea === "all" || p.areaId === selectedArea;
+      const matchArea = p.areaId === selectedArea;
       const matchDonor = selectedDonor === "all" || p.donor === selectedDonor;
       const matchStatus = selectedStatus === "all" || p.status === selectedStatus;
       const matchSearch =
@@ -60,8 +62,58 @@ export function ProjectsView() {
     return { approved, released, spent, committed, avgUtil };
   }, [filteredProjects]);
 
+  const currentArea = financeAreas.find((area) => area.id === selectedArea);
+
+  if (!currentArea) {
+    return (
+      <div className="space-y-6">
+        <section className="flex flex-col justify-between gap-5 rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:flex-row lg:items-center">
+          <div>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Project financial portfolios</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text)]">Select a thematic area</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-muted)]">Explore projects by thematic area to review grant allocations, fund releases and expenditure.</p>
+          </div>
+          <ProjectOnboarding areas={financeAreas.map((area) => area.name)} />
+        </section>
+        <section aria-label="Thematic areas" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {financeAreas.map((area) => {
+            const approved = area.projects.reduce((sum, project) => sum + project.approved, 0);
+            const spent = area.projects.reduce((sum, project) => sum + project.spent, 0);
+            const utilization = approved ? Math.round(spent / approved * 100) : 0;
+            return (
+              <button key={area.id} type="button" onClick={() => {
+                setSelectedArea(area.id);
+                setSelectedDonor("all");
+                setSelectedStatus("all");
+                setSearchQuery("");
+              }} className="focus-ring group rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 text-left shadow-[var(--shadow-card)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-strong)]">
+                <div className="flex items-center justify-between">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]"><FolderKanban size={21} aria-hidden="true" /></span>
+                  <ArrowUpRight size={18} aria-hidden="true" className="text-[var(--text-muted)]" />
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-[var(--text)]">{area.name}</h3>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">{area.projects.length} {area.projects.length === 1 ? "project" : "projects"}</p>
+                <dl className="mt-6 grid grid-cols-2 gap-4">
+                  <div><dt className="text-xs text-[var(--text-muted)]">Approved budget</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">{formatCurrency(approved, true)}</dd></div>
+                  <div><dt className="text-xs text-[var(--text-muted)]">Utilization</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">{utilization}%</dd></div>
+                </dl>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full bg-[var(--text-muted)]" style={{ width: `${Math.min(utilization, 100)}%` }} /></div>
+                <span className="mt-5 block text-xs font-medium text-[var(--text)]">View projects</span>
+              </button>
+            );
+          })}
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <nav aria-label="Project navigation" className="flex flex-wrap items-center gap-3 text-xs">
+        <button type="button" onClick={() => setSelectedArea(null)} className="focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)]"><ChevronLeft size={16} aria-hidden="true" />Thematic areas</button>
+        <span aria-hidden="true" className="text-[var(--text-muted)]">/</span>
+        <span aria-current="page" className="font-medium text-[var(--text)]">{currentArea.name}</span>
+      </nav>
       {/* Hero Banner */}
       <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-900 p-6 text-white shadow-xl sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
@@ -72,10 +124,10 @@ export function ProjectsView() {
               <FolderKanban size={13} /> Project Financial Portfolios
             </span>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              Project Grant Allocations & Burn Analysis
+              {currentArea.name} projects
             </h2>
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
-              Comprehensive financial oversight for all 44 active programs across 6 states. Track donor releases, burn rates, advance settlements, and utilization certificates.
+              Review {currentArea.projects.length} projects in {currentArea.name}. Track donor releases, burn rates, advance settlements, and utilization certificates.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -167,7 +219,7 @@ export function ProjectsView() {
             <div>
               <h3 className="text-sm font-semibold text-[var(--text)]">Project Financial Register</h3>
               <p className="text-[10px] text-[var(--text-subtle)]">
-                Showing {filteredProjects.length} of {allProjects.length} projects
+                Showing {filteredProjects.length} of {currentArea.projects.length} projects
               </p>
             </div>
           </div>
@@ -178,6 +230,7 @@ export function ProjectsView() {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]" />
               <input
                 type="search"
+                aria-label="Search projects"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search project, donor, state..."
@@ -186,19 +239,7 @@ export function ProjectsView() {
             </div>
 
             <select
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-              className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
-            >
-              <option value="all">All Thematic Areas</option>
-              {financeAreas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-
-            <select
+              aria-label="Filter by donor"
               value={selectedDonor}
               onChange={(e) => setSelectedDonor(e.target.value)}
               className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
@@ -212,6 +253,7 @@ export function ProjectsView() {
             </select>
 
             <select
+              aria-label="Filter by status"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="focus-ring h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"

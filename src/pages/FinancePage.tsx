@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   BadgeIndianRupee,
   Bell,
-  CheckCheck,
+  FileText,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -28,9 +28,9 @@ import { FinanceDashboard } from "../features/finance/FinanceDashboard";
 import {
   BudgetsView,
   PaymentsView,
-  ProcurementApprovalsView,
-  CombinedApprovalsView
+  ProcurementApprovalsView
 } from "../features/finance/FinanceOperationsViews";
+import { InvoicesView } from "../features/finance/InvoicesView";
 import { BankingView } from "../features/finance/BankingView";
 import { VendorManagementView } from "../features/finance/VendorManagementView";
 import { SalaryView } from "../features/finance/SalaryView";
@@ -63,6 +63,7 @@ const validSections = [
   "audit",
   "projects",
   "approvals",
+  "invoices",
   "alerts"
 ];
 
@@ -86,7 +87,7 @@ export default function FinancePage() {
   const activeArea = isFinanceArea ? financeAreas.find((area) => area.id === areaId) : undefined;
   
   // Normalized section name
-  const section = areaId === "budgets"
+  const section = areaId === "approvals" ? "invoices" : areaId === "budgets"
     ? "budget"
     : areaId === "vendors"
     ? "vendor-management"
@@ -130,8 +131,8 @@ export default function FinancePage() {
     ? "Project-wise employee invoice audit trail"
     : section === "projects"
     ? "Project finances & grant utilization"
-    : section === "approvals"
-    ? "Financial approvals queue"
+    : section === "invoices"
+    ? "Internal & client invoices"
     : section === "alerts"
     ? "Alerts & notifications"
     : "Overall finance dashboard";
@@ -273,13 +274,13 @@ export default function FinancePage() {
           onClick={() => closeMobileAndNavigate("/finance/projects")}
         />
 
-        {/* 12) Approvals */}
+        {/* 12) Invoices */}
         <NavButton
           collapsed={collapsed}
-          active={isCurrent("approvals")}
-          icon={<CheckCheck size={17} />}
-          label="Approvals"
-          onClick={() => closeMobileAndNavigate("/finance/approvals")}
+          active={isCurrent("invoices")}
+          icon={<FileText size={17} />}
+          label="Invoices"
+          onClick={() => closeMobileAndNavigate("/finance/invoices")}
         />
       </nav>
 
@@ -430,8 +431,8 @@ export default function FinancePage() {
             <AuditTrailsView />
           ) : section === "projects" ? (
             <ProjectsView />
-          ) : section === "approvals" ? (
-            <CombinedApprovalsView />
+          ) : section === "invoices" ? (
+            <InvoicesView />
           ) : section === "alerts" ? (
             <AlertsView />
           ) : (

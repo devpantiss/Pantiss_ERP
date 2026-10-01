@@ -1,4 +1,5 @@
 import { useState, type SetStateAction } from "react";
+import type { ClaimReceipt } from "./receiptStore";
 import { skillingAuditSamples } from "./skillingAuditSamples";
 
 export interface InvoiceAuditEvent {
@@ -21,6 +22,7 @@ export interface ReimbursementClaim {
   billsCount: number;
   description: string;
   receiptName: string;
+  receipts?: ClaimReceipt[];
   status: "Pending Verification" | "Finance Approved" | "Disbursed" | "Rejected";
   managerApproved: boolean;
   financeAudited: boolean;
