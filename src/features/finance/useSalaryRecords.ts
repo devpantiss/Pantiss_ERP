@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   createSalaryRecords,
+  isFinanceEligible,
+  reviewSalaryByHR,
   salaryKey,
   updateSalaryPayment,
   forwardSalaryForPayment,
@@ -16,6 +18,10 @@ export const salaryStorageKey = "pantiss:salary-payments:v1";
 
 export interface StoredSalaryPayment extends SalaryPaymentUpdate {
   key: string;
+  hrApproval?: SalaryRecord["hrApproval"];
+  hrApprovedBy?: string;
+  hrApprovedOn?: string;
+  hrReason?: string;
   forwardedAt?: string;
   forwardedBy?: string;
   approvalStatus?: SalaryRecord["approvalStatus"];
@@ -39,6 +45,10 @@ export function readSavedSalaryRecords(): { records: SalaryRecord[]; error: stri
         if (salaryKey(record) !== update.key) return record;
         return {
           ...record,
+          hrApproval: update.hrApproval ?? record.hrApproval,
+          hrApprovedBy: update.hrApprovedBy ?? record.hrApprovedBy,
+          hrApprovedOn: update.hrApprovedOn ?? record.hrApprovedOn,
+          hrReason: update.hrReason,
           forwardedAt: update.forwardedAt ?? record.forwardedAt,
           forwardedBy: update.forwardedBy ?? record.forwardedBy,
           approvalStatus: update.approvalStatus ?? record.approvalStatus,
@@ -54,7 +64,7 @@ export function readSavedSalaryRecords(): { records: SalaryRecord[]; error: stri
   }
 }
 
-export function useSalaryRecords() {
+export function useSalaryRecords(scope: "finance" | "hr" = "finance") {
   const [state, setState] = useState(readSavedSalaryRecords);
   useEffect(() => {
     const refresh = () => setState(readSavedSalaryRecords());
@@ -67,6 +77,10 @@ export function useSalaryRecords() {
     const records = transform(latest.records);
     const payments: StoredSalaryPayment[] = records.map(record => ({
       key: salaryKey(record),
+      hrApproval: record.hrApproval,
+      hrApprovedBy: record.hrApprovedBy,
+      hrApprovedOn: record.hrApprovedOn,
+      hrReason: record.hrReason,
       status: record.status,
       paidOn: record.paidOn ?? "",
       reference: record.reference ?? "",
@@ -92,6 +106,8 @@ export function useSalaryRecords() {
   const rejectSalary = (key: string, reason?: string) => persist(records => rejectSalaryRecord(records, key, reason));
   const savePayment = (key: string, update: SalaryPaymentUpdate) => persist(records => recordSalaryDisbursement(records, key, update));
 
-  return { ...state, savePayment, forwardForPayment, forwardMultiple, approveSalary, rejectSalary };
+  const reviewByHR = (key: string, decision: "Approved" | "Rejected", actor: string, reason?: string) => persist(records => reviewSalaryByHR(records, key, decision, actor, reason));
+
+  return { ...state, records: scope === "hr" ? state.records : state.records.filter(isFinanceEligible), reviewByHR, savePayment, forwardForPayment, forwardMultiple, approveSalary, rejectSalary };
 }
 

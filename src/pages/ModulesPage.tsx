@@ -20,6 +20,10 @@ export default function ModulesPage() {
   const [selectedModule, setSelectedModule] = useState<ModuleItem | null>(null);
   const closeLogin = useCallback(() => setSelectedModule(null), []);
   const openModule = useCallback((module: ModuleItem) => {
+    if (module.id === "human-resources" && user?.moduleId === module.id) {
+      navigate("/hr/dashboard");
+      return;
+    }
     if (module.id === "finance" && user?.moduleId === module.id) {
       navigate("/finance/dashboard");
       return;
@@ -31,6 +35,7 @@ export default function ModulesPage() {
     setSelectedModule(module);
   }, [navigate, user]);
   const handleAuthenticated = useCallback((authenticatedUser: AuthUser) => {
+    if (selectedModule?.id === "human-resources") navigate("/hr/dashboard");
     if (selectedModule?.id === "finance") {
       navigate("/finance/dashboard");
     }

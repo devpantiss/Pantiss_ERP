@@ -160,6 +160,13 @@ const sampleEmployees: EmployeeSalaryRecord[] = [
 export interface SalaryRecord extends EmployeeSalaryRecord {
   month: string;
   projectId: string;
+  adminApproval: "Approved" | "Pending" | "Rejected";
+  adminApprovedBy?: string;
+  adminApprovedOn?: string;
+  hrApproval: "Approved" | "Pending" | "Rejected";
+  hrApprovedBy?: string;
+  hrApprovedOn?: string;
+  hrReason?: string;
   approvalStatus: "Approved" | "Pending approval" | "Rejected";
   approvedBy?: string;
   approvedOn?: string;
@@ -191,6 +198,10 @@ export function createSalaryRecords(): SalaryRecord[] {
     const status = month === "2026-09" && index === 2 ? "Pending" : month === "2026-09" && index === 6 ? "Hold" : employee.status;
     return {
       ...employee, month, projectId: employeeProjects[employee.id], status,
+      adminApproval: status === "Hold" ? "Pending" as const : "Approved" as const,
+      ...(status !== "Hold" ? { adminApprovedBy: "Admin (demo)", adminApprovedOn: `${month}-20` } : {}),
+      hrApproval: status === "Disbursed" ? "Approved" as const : "Pending" as const,
+      ...(status === "Disbursed" ? { hrApprovedBy: "HR Manager (demo)", hrApprovedOn: `${month}-21` } : {}),
       approvalStatus: status === "Hold" ? "Pending approval" as const : "Approved" as const,
       ...(status !== "Hold" ? { approvedBy: "Payroll approver (demo)", approvedOn: `${month}-22` } : {}),
       ...(status === "Disbursed" ? { forwardedAt: `${month}-23T10:00:00.000Z`, forwardedBy: "Finance Manager (demo)", paidOn: `${month}-24`, reference: `DEMO-${month.replace("-", "")}-${employee.id.slice(-4)}` } : {}),
@@ -234,7 +245,7 @@ export function updateSalaryPayment(records: SalaryRecord[], key: string, update
 }
 
 export function canForwardSalary(record: SalaryRecord): boolean {
-  return record.approvalStatus === "Approved" && record.status === "Pending" && !record.forwardedAt;
+  return isFinanceEligible(record) && record.approvalStatus === "Approved" && record.status === "Pending" && !record.forwardedAt;
 }
 
 export function forwardSalaryForPayment(records: SalaryRecord[], key: string, actor: string): SalaryRecord[] {
@@ -247,7 +258,7 @@ export function forwardSalaryForPayment(records: SalaryRecord[], key: string, ac
 
 export function recordSalaryDisbursement(records: SalaryRecord[], key: string, update: SalaryPaymentUpdate): SalaryRecord[] {
   const record = records.find(record => salaryKey(record) === key);
-  if (!record || record.approvalStatus !== "Approved" || !record.forwardedAt || record.status !== "Pending") throw new Error("This salary is not ready for payment. It must be approved and forwarded first.");
+  if (!record || !isFinanceEligible(record) || record.approvalStatus !== "Approved" || !record.forwardedAt || record.status !== "Pending") throw new Error("This salary is not ready for payment. It must be approved and forwarded first.");
   if (update.status !== "Disbursed") throw new Error("Record a completed payment from the payment desk.");
   return updateSalaryPayment(records, key, update);
 }
@@ -255,6 +266,7 @@ export function recordSalaryDisbursement(records: SalaryRecord[], key: string, u
 export function approveSalaryRecord(records: SalaryRecord[], key: string, approver: string): SalaryRecord[] {
   const record = records.find(record => salaryKey(record) === key);
   if (!record) throw new Error("This salary record could not be found.");
+  if (!isFinanceEligible(record)) throw new Error("Admin and HR approval are required before Finance can process this salary.");
   const today = new Date().toISOString().slice(0, 10);
   return records.map(record => salaryKey(record) === key ? {
     ...record,
@@ -268,6 +280,7 @@ export function approveSalaryRecord(records: SalaryRecord[], key: string, approv
 export function rejectSalaryRecord(records: SalaryRecord[], key: string, reason?: string): SalaryRecord[] {
   const record = records.find(record => salaryKey(record) === key);
   if (!record) throw new Error("This salary record could not be found.");
+  if (!isFinanceEligible(record)) throw new Error("Admin and HR approval are required before Finance can process this salary.");
   return records.map(record => salaryKey(record) === key ? {
     ...record,
     approvalStatus: "Rejected" as const,
@@ -290,9 +303,30 @@ export function forwardMultipleSalariesForPayment(records: SalaryRecord[], keys:
 }
 
 export function salaryWorkflowLabel(record: SalaryRecord): string {
+  if (record.adminApproval !== "Approved") return `Admin ${record.adminApproval.toLowerCase()}`;
+  if (record.hrApproval !== "Approved") return `HR ${record.hrApproval.toLowerCase()}`;
   if (record.status === "Disbursed") return "Disbursed";
   if (record.approvalStatus !== "Approved") return record.approvalStatus;
   if (record.status === "Hold") return "On hold";
   return record.forwardedAt ? "Forwarded for payment" : "Ready to forward";
 }
 
+
+/** Finance must never receive records before both upstream approvals. */
+export function isFinanceEligible(record: SalaryRecord): boolean {
+  return record.adminApproval === "Approved" && record.hrApproval === "Approved";
+}
+
+export function reviewSalaryByHR(records: SalaryRecord[], key: string, decision: "Approved" | "Rejected", actor: string, reason = ""): SalaryRecord[] {
+  const record = records.find(item => salaryKey(item) === key);
+  if (!record) throw new Error("Salary record not found.");
+  if (record.adminApproval !== "Approved") throw new Error("Admin must approve this salary before HR can review it.");
+  if (record.hrApproval !== "Pending" || record.status === "Disbursed" || record.forwardedAt) throw new Error("This salary has already been reviewed or processed.");
+  if (!actor.trim()) throw new Error("An HR reviewer is required.");
+  if (decision === "Rejected" && !reason.trim()) throw new Error("Add a reason before returning the salary.");
+  return records.map(item => salaryKey(item) === key ? {
+    ...item, hrApproval: decision, hrApprovedBy: actor.trim(), hrApprovedOn: new Date().toISOString(), hrReason: reason.trim(),
+    approvalStatus: "Pending approval", approvedBy: undefined, approvedOn: undefined,
+    status: decision === "Approved" ? "Pending" : "Hold",
+  } : item);
+}

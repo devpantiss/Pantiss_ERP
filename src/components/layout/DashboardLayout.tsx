@@ -5,6 +5,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { cn } from "../../utils/cn";
 
 interface DashboardLayoutProps {
+  workspaceNote?: string;
   title: string;
   workspace: string;
   userName: string;
@@ -16,7 +17,7 @@ interface DashboardLayoutProps {
 }
 
 /** Shared dashboard shell, using the Finance and M&E workspace dimensions. */
-export function DashboardLayout({ title, workspace, userName, roleLabel, initials, navigation, onSignOut, children }: DashboardLayoutProps) {
+export function DashboardLayout({ workspaceNote = "Read-only monitoring · Demo", title, workspace, userName, roleLabel, initials, navigation, onSignOut, children }: DashboardLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -50,7 +51,7 @@ export function DashboardLayout({ title, workspace, userName, roleLabel, initial
         </Link>;
       })}
     </nav>
-    {!compact && <div className="mx-3 mb-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3"><p className="text-xs font-semibold text-[var(--text)]">{userName}</p><p className="mt-1 text-[10px] text-[var(--brand-primary)]">{roleLabel}</p><p className="mt-2 text-[10px] text-[var(--text-muted)]">Read-only monitoring · Demo</p></div>}
+    {!compact && <div className="mx-3 mb-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3"><p className="text-xs font-semibold text-[var(--text)]">{userName}</p><p className="mt-1 text-[10px] text-[var(--brand-primary)]">{roleLabel}</p><p className="mt-2 text-[10px] text-[var(--text-muted)]">{workspaceNote}</p></div>}
     <div className="border-t border-[var(--border)] p-3"><button type="button" onClick={onSignOut} aria-label={compact ? "Sign out" : undefined} title={compact ? "Sign out" : undefined} className={cn("focus-ring flex min-h-11 w-full items-center rounded-xl text-xs text-[var(--text-muted)] hover:bg-[var(--surface-soft)]", compact ? "justify-center" : "gap-3 px-3")}><LogOut size={17} />{!compact && "Sign out"}</button></div>
   </div>;
 
