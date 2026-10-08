@@ -1,4 +1,4 @@
-import { Award, BriefcaseBusiness, CalendarCheck, CalendarDays, LayoutDashboard, Network, Target, UserPlus, Wallet } from "lucide-react";
+import { Award, BriefcaseBusiness, CalendarCheck, CalendarDays, LayoutDashboard, Network, Target, UserCheck, UserPlus, Wallet } from "lucide-react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useAuth } from "../hooks/useAuth";
@@ -7,12 +7,14 @@ import { SalaryApprovalsView, LeaveView } from "../features/hr/ApprovalViews";
 import { AttendanceView } from "../features/hr/AttendanceView";
 import { OnboardingView, AssignmentView, DesignationsView } from "../features/hr/PeopleViews";
 import { PerformanceView } from "../features/hr/PerformanceViews";
+import { RecruitmentView } from "../features/hr/RecruitmentViews";
 import { useHRStore } from "../features/hr/store";
 import "../features/cxo/cxo.css";
 import "../features/hr/hr.css";
 
 const navigation = [
   { label: "Dashboard", to: "/hr/dashboard", icon: LayoutDashboard },
+  { label: "Recruitment & Hiring", to: "/hr/recruitment", icon: UserCheck },
   { label: "Employee Onboarding", to: "/hr/employee-onboarding", icon: UserPlus },
   { label: "Project Assignment", to: "/hr/project-assignment", icon: Network },
   { label: "Job Designations", to: "/hr/job-designations", icon: BriefcaseBusiness },
@@ -24,6 +26,7 @@ const navigation = [
 ];
 const descriptions: Record<string, string> = {
   dashboard: "Your people, approvals and priorities, connected in one place.",
+  recruitment: "Applicant pipeline, interview scheduling, job requisitions and offer letter releases.",
   "employee-onboarding": "Welcome employees and prepare their role, deployment and access details.",
   "project-assignment": "Connect each employee to a project and centre in their thematic area.",
   "job-designations": "Define the roles your teams need, organised by thematic area.",
@@ -48,6 +51,7 @@ function HRWorkspace({ section, title }: { section: string; title: string }) {
     <div className="cxo-dashboard-heading"><div><span className="cxo-eyebrow">People & culture · FY 2026–27</span><h2 className="hr-title">{section === "dashboard" ? "Your people, at a glance." : title}</h2><p>{descriptions[section]}</p></div><span className="cxo-readonly">Demo workspace</span></div>
     {store.notice && <p className="hr-notice" role="status">{store.notice}</p>}{store.error && <p className="hr-error" role="alert">{store.error}</p>}
     {section === "dashboard" && <HRDashboard data={store.data} />}
+    {section === "recruitment" && <RecruitmentView store={store} />}
     {section === "employee-onboarding" && <OnboardingView store={store} />}
     {section === "project-assignment" && <AssignmentView store={store} />}
     {section === "job-designations" && <DesignationsView store={store} />}

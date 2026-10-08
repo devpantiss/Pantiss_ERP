@@ -7,8 +7,20 @@ export function Metric({ label, value, detail }: { label: string; value: ReactNo
   return <article className="cxo-panel cxo-metric"><h2>{label}</h2><p>{value}</p><span>{detail}</span></article>;
 }
 export function Status({ children }: { children: string }) {
-  const tone = /Rejected|missing|No punch|Returned/i.test(children) ? "error" : /Pending|Awaiting|Onboarding|Not|Unassigned/i.test(children) ? "warning" : "positive";
+  const tone = /Rejected|missing|No punch|Returned|Declined|Closed|Cancelled/i.test(children) ? "error" : /Pending|Awaiting|Onboarding|Not|Unassigned|Applied|Screening|Interview|Draft/i.test(children) ? "warning" : "positive";
   return <span className="hr-status" data-tone={tone}>{children}</span>;
+}
+export function dateTimeLabel(iso?: string) {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
 }
 export function Progress({ value, label }: { value: number; label: string }) {
   return <div className="cxo-progress" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}><span style={{ width: `${value}%` }} /></div>;
@@ -28,3 +40,20 @@ export function filterEmployees(state: HRState, query: string, area: string) {
 export function areaName(id: string) { return financeAreas.find(a => a.id === id)?.name ?? "Unassigned"; }
 export function dateLabel(date?: string) { return date ? new Date(date.length === 10 ? `${date}T12:00:00` : date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Awaiting decision"; }
 export function timestampLabel(date?: string) { return date ? new Date(date).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Not received"; }
+export const rupees = (amount: number) => `₹${Math.round(amount).toLocaleString("en-IN")}`;
+
+/** Annual + monthly salary pair. `tone="highlight"` is used for revised/appraised salary. */
+export function SalarySummary({ label, annual, tone = "default", caption }: { label: string; annual?: number; tone?: "default" | "highlight"; caption?: ReactNode }) {
+  const valid = annual !== undefined && Number.isFinite(annual) && annual > 0;
+  return <section className="hr-salary" data-tone={tone} aria-live="polite" aria-label={label}>
+    <header><span>{label}</span>{caption && <small>{caption}</small>}</header>
+    <dl>
+      <div><dt>Annual</dt><dd>{valid ? rupees(annual) : "—"}</dd></div>
+      <div><dt>Monthly</dt><dd>{valid ? rupees(annual / 12) : "—"}</dd></div>
+    </dl>
+  </section>;
+}
+export function SalaryCell({ annual }: { annual?: number }) {
+  if (!annual) return <span className="hr-cell-note">Not recorded</span>;
+  return <><strong className="hr-num">{rupees(annual)}<small> / yr</small></strong><span className="hr-cell-note hr-num">{rupees(annual / 12)} / month</span></>;
+}

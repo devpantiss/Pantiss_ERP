@@ -9,6 +9,18 @@ function readState(): { data: HRState; error: string } {
     if (!raw) return { data: createHRState(), error: "" };
     const parsed = JSON.parse(raw) as HRState;
     if (!parsed || ![parsed.employees, parsed.designations, parsed.assignments, parsed.assessments, parsed.appraisals, parsed.attendance].every(Array.isArray) || !parsed.leaveDecisions || typeof parsed.leaveDecisions !== "object") throw new Error("Invalid HR data");
+    // Backfill salaries for workspaces saved before salary tracking was introduced.
+    const initial = createHRState();
+    if (parsed.employees.some(e => e.annualSalary === undefined)) {
+      const seeded = new Map(initial.employees.map(e => [e.id, e.annualSalary]));
+      parsed.employees = parsed.employees.map(e => e.annualSalary === undefined && seeded.get(e.id) ? { ...e, annualSalary: seeded.get(e.id) } : e);
+    }
+    // Backfill recruitment collections if missing from saved workspace
+    if (!Array.isArray(parsed.jobPostings)) parsed.jobPostings = initial.jobPostings;
+    if (!Array.isArray(parsed.candidates)) parsed.candidates = initial.candidates;
+    if (!Array.isArray(parsed.interviews)) parsed.interviews = initial.interviews;
+    if (!Array.isArray(parsed.offerLetters)) parsed.offerLetters = initial.offerLetters;
+
     return { data: parsed, error: "" };
   } catch { return { data: createHRState(), error: "Saved HR data could not be loaded. Sample data is shown; changes are blocked to protect saved records." }; }
 }

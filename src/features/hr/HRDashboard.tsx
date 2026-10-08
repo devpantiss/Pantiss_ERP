@@ -19,8 +19,10 @@ export function HRDashboard({ data }: { data: HRState }) {
   const assessed = data.assessments.filter(a => a.year === reviewYears[0]).length;
   const completed = data.appraisals.filter(a => a.year === reviewYears[0]).length;
   const readyLeave = leaves.filter(l => l.adminStatus === "Approved" && !data.leaveDecisions[l.id]).length;
+  const selectedCandidates = (data.candidates || []).filter(c => c.stage === "Selected").length;
   const actions = [
     { to: "salary", title: `${readyHR.length} salaries ready for HR`, text: `${salaryMoney(readyHR.reduce((s, r) => s + r.netPay, 0))} awaiting release to Finance` },
+    ...(selectedCandidates ? [{ to: "recruitment", title: `${selectedCandidates} candidate(s) selected`, text: "Prepare and release formal offer letters" }] : []),
     { to: "leave-management", title: `${readyLeave} leave requests ready for HR`, text: "Admin clearance received" },
     { to: "attendance", title: `${exceptionCount} attendance exceptions`, text: `Missing punches or photos · ${latestDate}` },
     { to: "project-assignment", title: `${unassigned.length} employees unassigned`, text: "Assign a primary project and centre" },
