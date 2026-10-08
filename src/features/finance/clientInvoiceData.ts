@@ -2,7 +2,8 @@ export interface InvoiceLine { id: string; description: string; quantity: number
 export interface ClientInvoice {
   id: string; number: string; projectId: string; projectName: string;
   client: string; email: string; address: string; issuedOn: string; dueOn: string;
-  lines: InvoiceLine[]; notes: string; status: "Draft" | "Raised"; raisedAt?: string;
+  lines: InvoiceLine[]; notes: string; status: "Draft" | "Raised" | "Admin Verified"; raisedAt?: string;
+  adminVerifiedAt?: string;
 }
 export const invoiceTotal = (lines: InvoiceLine[]) => lines.reduce((sum, line) => sum + Math.round(line.quantity * line.rate * 100), 0) / 100;
 export const invoiceMoney = (value: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
@@ -21,10 +22,14 @@ export async function downloadClientInvoice(invoice: ClientInvoice) {
     }
     y += 3;
   };
-  write(invoice.status === "Draft" ? "DRAFT INVOICE" : "INVOICE", 22);
+  const statusLabel = invoice.status === "Draft" ? "DRAFT INVOICE" : invoice.status === "Admin Verified" ? "INVOICE (ADMIN VERIFIED)" : "INVOICE";
+  write(statusLabel, 22);
   write(`Pantiss | ${invoice.number}`);
   write(`Project: ${invoice.projectName}`);
   write(`Issued: ${invoice.issuedOn} | Due: ${invoice.dueOn}`);
+  if (invoice.status === "Admin Verified" && invoice.adminVerifiedAt) {
+    write(`Admin Verified on: ${new Date(invoice.adminVerifiedAt).toLocaleDateString("en-IN")}`);
+  }
   write(`Bill to: ${invoice.client}\n${invoice.email}\n${invoice.address}`);
   invoice.lines.forEach((line, index) => write(`${index + 1}. ${line.description}\n${line.quantity} x INR ${line.rate.toFixed(2)} = INR ${(Math.round(line.quantity * line.rate * 100) / 100).toFixed(2)}`));
   write(`Total payable: INR ${invoiceTotal(invoice.lines).toFixed(2)}`, 16);

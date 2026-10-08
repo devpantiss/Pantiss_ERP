@@ -64,6 +64,36 @@
       "roleLabel": "Strategy & Innovation Manager",
       "moduleId": "strategy-innovation",
       "allowedSections": []
+    },
+    {
+      "id": "ceo@pantiss.org",
+      "password": "CEO@123",
+      "name": "CEO Demo",
+      "initials": "CEO",
+      "role": "ceo",
+      "roleLabel": "Chief Executive Officer",
+      "moduleId": "cxo",
+      "allowedSections": []
+    },
+    {
+      "id": "coo@pantiss.org",
+      "password": "COO@123",
+      "name": "COO Demo",
+      "initials": "COO",
+      "role": "coo",
+      "roleLabel": "Chief Operating Officer",
+      "moduleId": "cxo",
+      "allowedSections": []
+    },
+    {
+      "id": "cfo@pantiss.org",
+      "password": "CFO@123",
+      "name": "CFO Demo",
+      "initials": "CFO",
+      "role": "cfo",
+      "roleLabel": "Chief Financial Officer",
+      "moduleId": "cxo",
+      "allowedSections": []
     }
   ]
 }

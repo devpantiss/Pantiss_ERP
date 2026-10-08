@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-export type CategorySlug = "core-operations" | "thematic-areas" | "clients";
+export type CategorySlug = "core-operations" | "thematic-areas" | "cxo";
 
 export interface ModuleItem {
   id: string;

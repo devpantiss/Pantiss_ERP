@@ -1,3 +1,4 @@
+import { budgetCategories, allocationShares, type BudgetCategory } from "./budgetCategories";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowDown, ArrowLeft, ArrowUp, ArrowUpRight, Banknote, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, Clock3, Coins, Copy, Download, Eye, FileText, GitCompareArrows, History, House, Landmark, Paperclip, Plane, Plus, ReceiptText, RotateCcw, Save, Scale, Search, Send, ShieldCheck, ShoppingCart, Trash2, Upload, UserRound, Utensils, WalletCards, X, Zap } from "lucide-react";
@@ -53,9 +54,6 @@ interface BudgetLine {
   rate: number;
 }
 
-type BudgetCategory = "Personnel" | "Programme activities" | "Equipment & materials" | "Travel & field operations" | "Monitoring & evaluation" | "Administration";
-const budgetCategories: BudgetCategory[] = ["Personnel", "Programme activities", "Equipment & materials", "Travel & field operations", "Monitoring & evaluation", "Administration"];
-const allocationShares: Record<BudgetCategory, number> = { Personnel: .24, "Programme activities": .31, "Equipment & materials": .18, "Travel & field operations": .11, "Monitoring & evaluation": .08, Administration: .08 };
 const budgetDraftStorageKey = "pantiss:finance-budget-drafts";
 const budgetAutosaveStorageKey = "pantiss:finance-budget-autosave";
 

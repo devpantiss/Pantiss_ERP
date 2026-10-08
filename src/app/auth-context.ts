@@ -14,7 +14,7 @@ export interface AuthUser {
   id: string;
   name: string;
   initials: string;
-  role: CoreOperationsRole;
+  role: CoreOperationsRole | "ceo" | "coo" | "cfo";
   roleLabel: string;
   moduleId: string;
   allowedSections: MESection[];

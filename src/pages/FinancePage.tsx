@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   BadgeIndianRupee,
+  BookOpen,
   Bell,
   FileText,
   ChevronLeft,
@@ -45,7 +46,10 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { cn } from "../utils/cn";
 
+import { BooksView } from "../features/finance/BooksView";
+
 const validSections = [
+  "books",
   "dashboard",
   "budget",
   "budgets",
@@ -109,6 +113,8 @@ export default function FinancePage() {
 
   const pageTitle = activeArea
     ? `${activeArea.name} finances`
+    : section === "books"
+    ? "Books & project expenditure"
     : section === "budget"
     ? "Budget planning & allocations"
     : section === "banking"
@@ -192,6 +198,8 @@ export default function FinancePage() {
           label="Budget"
           onClick={() => closeMobileAndNavigate("/finance/budget")}
         />
+
+        <NavButton collapsed={collapsed} active={isCurrent("books")} icon={<BookOpen size={17} />} label="Books" onClick={() => closeMobileAndNavigate("/finance/books")} />
 
         {/* 3) Banking */}
         <NavButton
@@ -409,6 +417,8 @@ export default function FinancePage() {
         <main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
           {activeArea ? (
             <FinanceDashboard areaId={activeArea.id} />
+          ) : section === "books" ? (
+            <BooksView />
           ) : section === "budget" ? (
             <BudgetsView />
           ) : section === "banking" ? (

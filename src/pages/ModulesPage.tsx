@@ -24,8 +24,8 @@ export default function ModulesPage() {
       navigate("/finance/dashboard");
       return;
     }
-    if (module.id === "monitoring-evaluation" && user?.moduleId === module.id) {
-      navigate(`/monitoring-evaluation/${user.allowedSections[0]}`);
+    if (module.id === "monitoring-evaluation") {
+      navigate("/monitoring-evaluation");
       return;
     }
     setSelectedModule(module);
@@ -93,7 +93,7 @@ export default function ModulesPage() {
                 transition={{ delay: 0.22 }}
                 className="mt-2 text-sm text-[var(--text-muted)]"
               >
-                {category.description} Select an operating module to continue.
+                {category.description} {category.id === "cxo" ? "Select your executive role to sign in." : "Select an operating module to continue."}
               </motion.p>
             </div>
             <motion.div
@@ -115,7 +115,7 @@ export default function ModulesPage() {
         >
           <div>
             <h2 className="text-lg font-semibold tracking-[-0.025em] text-[var(--text)]">
-              Modules
+              {category.id === "cxo" ? "Executive monitoring" : "Modules"}
             </h2>
             <p className="mt-1 text-xs text-[var(--text-subtle)]">
               Continue to the workspace you need.
@@ -132,7 +132,8 @@ export default function ModulesPage() {
               key={module.id}
               module={module}
               index={index}
-              onSelect={category.id === "core-operations" ? openModule : undefined}
+              opensDialog={category.id !== "cxo" && module.id !== "monitoring-evaluation"}
+              onSelect={category.id === "cxo" ? module => navigate(`/cxo/${module.id}/login`) : category.id === "core-operations" ? openModule : undefined}
             />
           ))}
         </div>
@@ -146,6 +147,6 @@ export default function ModulesPage() {
 }
 
 function categoriesIndex(id: string) {
-  const order = ["core-operations", "thematic-areas", "clients"];
+  const order = ["core-operations", "thematic-areas", "cxo"];
   return order.indexOf(id);
 }

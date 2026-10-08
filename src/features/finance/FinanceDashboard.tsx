@@ -9,6 +9,7 @@ import {
   Clock3,
   FileCheck2,
   Landmark,
+  PieChart,
   ReceiptIndianRupee,
   ShieldCheck,
   TrendingUp,
@@ -20,7 +21,21 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
 import { areaTotals, financeAreas, formatCurrency, portfolioTotals, type FinanceArea, type FinanceProject, type FinanceStatus } from "./data";
+import { ProjectExpenditureLedger } from "./ProjectExpenditureLedger";
 import { AnimatedNumber } from "./AnimatedNumber";
+import { MonthlyFinanceRow } from "./MonthlyFinanceRow";
+
+/** Read onboarded project data (tranches) from localStorage */
+function readOnboardedTranches() {
+  try {
+    const raw = localStorage.getItem("pantiss-project-onboarding-draft-v2");
+    if (!raw) return null;
+    const obj: Record<string, unknown> = JSON.parse(raw);
+    const budget = parseFloat(String(obj.budget)) || 0;
+    const tranches = Array.isArray(obj.tranches) ? obj.tranches as Array<{ percentage: number; tentativeDate: string }> : [];
+    return { budget, tranches, name: String(obj.name || "") };
+  } catch { return null; }
+}
 
 /** Formats a lakh value mid-animation — keeps the ₹ prefix and Cr/L suffix stable */
 function fmtLakh(n: number, precise = false): string {
@@ -320,6 +335,9 @@ function PortfolioFinanceDashboard() {
         </div>
       </section>
 
+      {/* Tranche Fund Allocation Section */}
+      <TrancheAllocationSection />
+
       {/* Row 3: Compliance Completeness + Highlights */}
       <section aria-labelledby="compliance-highlights-heading" className="grid items-stretch gap-5 xl:grid-cols-[1fr_1.4fr]">
 
@@ -583,15 +601,15 @@ function PortfolioFinanceDashboard() {
               <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
                   { label: "Approved", value: totals.approved },
-                  { label: "Released", value: totals.released },
+                  { label: "Released", value: totals.released, target: totals.approved },
                   { label: "Spent", value: totals.spent },
                   { label: "Available", value: totals.available },
                 ].map((metric) => (
                   <span key={metric.label} className="rounded-xl border border-[var(--border)] bg-[var(--module-bg)] p-3">
                     <span className="block text-sm font-semibold text-[var(--text)]">
-                      <AnimatedNumber value={metric.value} formatter={fmtLakh} duration={1100} />
+                      <AnimatedNumber value={metric.value} formatter={fmtLakh} duration={1100} />{metric.target !== undefined && <span className="mt-1 block text-xs font-normal text-[var(--text-muted)]">/ {fmtLakh(metric.target)}</span>}
                     </span>
-                    <span className="mt-1 block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">{metric.label}</span>
+                    <span className="mt-1 block text-[8px] uppercase tracking-wide text-[var(--text-subtle)]">{metric.label}{metric.target !== undefined && <span className="mt-1 block normal-case tracking-normal">Achieved / Target</span>}</span>
                   </span>
                 ))}
               </div>
@@ -612,7 +630,118 @@ function PortfolioFinanceDashboard() {
   );
 }
 
+function TrancheAllocationSection() {
+  const data = useMemo(readOnboardedTranches, []);
+  if (!data || !data.budget || !data.tranches.length) return null;
+
+  const formatINR = (val: number) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      aria-labelledby="tranche-allocation-heading"
+      className="rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)] sm:p-6"
+    >
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center mb-5">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-teal-500/10 text-teal-600">
+            <PieChart size={18} />
+          </span>
+          <div>
+            <h3 id="tranche-allocation-heading" className="text-base font-semibold text-[var(--text)]">
+              Tranche Fund Allocation
+            </h3>
+            <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
+              {data.name} · {data.tranches.length} tranche{data.tranches.length > 1 ? "s" : ""} · 50% Corpus + 50% Operations per tranche
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-center">
+            <p className="text-[9px] font-semibold text-emerald-600">Total Corpus</p>
+            <p className="text-sm font-bold text-emerald-600">{formatINR(data.budget * 0.5)}</p>
+          </div>
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.06] px-4 py-2 text-center">
+            <p className="text-[9px] font-semibold text-blue-600">Total Operations</p>
+            <p className="text-sm font-bold text-blue-600">{formatINR(data.budget * 0.5)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {data.tranches.map((tranche, index) => {
+          const pct = Number(tranche.percentage) || 0;
+          const trancheVal = data.budget * (pct / 100);
+          const corpus = trancheVal * 0.5;
+          const ops = trancheVal * 0.5;
+
+          let daysUntil: number | null = null;
+          let dueSoon = false;
+          let overdue = false;
+          if (tranche.tentativeDate) {
+            const due = new Date(tranche.tentativeDate);
+            due.setHours(0, 0, 0, 0);
+            daysUntil = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            dueSoon = daysUntil <= 14 && daysUntil >= 0;
+            overdue = daysUntil < 0;
+          }
+
+          return (
+            <div
+              key={index}
+              className={`rounded-2xl border p-4 ${
+                overdue
+                  ? "border-red-500/30 bg-red-500/[0.04]"
+                  : dueSoon
+                  ? "border-amber-500/30 bg-amber-500/[0.04]"
+                  : "border-[var(--border)] bg-[var(--surface-soft)]"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="grid size-6 place-items-center rounded-full bg-[var(--finance-accent-soft)] text-[10px] font-bold text-[var(--finance-accent)]">
+                  {index + 1}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                  overdue ? "bg-red-500/10 text-red-600" : dueSoon ? "bg-amber-500/10 text-amber-600" : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
+                }`}>
+                  {overdue
+                    ? `${Math.abs(daysUntil!)}d overdue`
+                    : dueSoon
+                    ? `Due in ${daysUntil}d`
+                    : tranche.tentativeDate || "No date"}
+                </span>
+              </div>
+              <p className="text-lg font-bold text-[var(--text)]">{pct}%</p>
+              <p className="text-[10px] text-[var(--text-muted)] mb-3">of {formatINR(data.budget)}</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg bg-emerald-500/[0.06] px-2.5 py-1.5">
+                  <span className="text-[9px] font-medium text-emerald-600">Corpus (50%)</span>
+                  <span className="text-[10px] font-bold text-emerald-600">{formatINR(corpus)}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-blue-500/[0.06] px-2.5 py-1.5">
+                  <span className="text-[9px] font-medium text-blue-600">Operations (50%)</span>
+                  <span className="text-[10px] font-bold text-blue-600">{formatINR(ops)}</span>
+                </div>
+              </div>
+              {overdue && (
+                <p className="mt-2 text-[9px] text-red-600 font-semibold">⚠ Invoice not raised by tentative date</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
 function AreaFinanceDashboard({ area }: { area: FinanceArea }) {
+
   const navigate = useNavigate();
   const totals = areaTotals(area);
   const [selectedProject, setSelectedProject] = useState<FinanceProject | null>(null);
@@ -624,55 +753,24 @@ function AreaFinanceDashboard({ area }: { area: FinanceArea }) {
 
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       { label: "Approved budget", rawValue: totals.approved, fmt: fmtLakh, note: `${area.projects.length} projects`, icon: Landmark },
-      { label: "Funds released", rawValue: totals.released, fmt: fmtLakh, note: `${Math.round(totals.released / totals.approved * 100)}% release rate`, icon: WalletCards },
+      { label: "Funds released", rawValue: totals.released, target: totals.approved, fmt: fmtLakh, note: "Achieved / Target · Approved budget", icon: WalletCards },
       { label: "Verified expenditure", rawValue: totals.spent, fmt: fmtLakh, note: `${totals.utilization}% utilization`, icon: ReceiptIndianRupee },
-      { label: "Committed", rawValue: totals.committed, fmt: fmtLakh, note: "POs and signed contracts", icon: FileCheck2 },
+      { label: "Contribution to corpus", rawValue: totals.released * 0.5, fmt: fmtLakh, note: "Estimated · 50% of released funds", icon: CircleDollarSign },
       { label: "Available balance", rawValue: totals.available, fmt: fmtLakh, note: "Net of commitments", icon: Banknote },
       { label: "Pending advances", rawValue: totals.pendingAdvances, fmt: fmtLakh, note: "Settlement evidence due", icon: Clock3 },
       { label: "Action required", rawValue: totals.atRisk, fmt: (n: number) => String(Math.round(n)), note: "Projects outside threshold", icon: AlertTriangle },
       { label: "Voucher compliance", rawValue: 93, fmt: fmtPct, note: "Complete supporting records", icon: ShieldCheck },
-    ].map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><Icon size={18} /></span><p className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]"><AnimatedNumber value={item.rawValue} formatter={item.fmt} duration={1200} /></p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-3 text-[10px] text-[var(--text-subtle)]">{item.note}</p></article>; })}</section>
+    ].map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-5 shadow-[var(--shadow-card)]"><span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><Icon size={18} /></span><p className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[var(--text)]"><AnimatedNumber value={item.rawValue} formatter={item.fmt} duration={1200} />{item.target !== undefined && <span className="ml-1 inline-block text-base font-medium text-[var(--text-muted)]">/ {item.fmt(item.target)}</span>}</p><p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{item.label}</p><p className="mt-3 text-[10px] text-[var(--text-subtle)]">{item.note}</p></article>; })}</section>
 
-    <section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="flex flex-col justify-between gap-3 border-b border-[var(--border)] p-5 sm:flex-row sm:items-end sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Project-wise financial details</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Approved, released, spent, committed and unsettled amounts for every {area.name} project</p></div><span className="text-[10px] text-[var(--text-subtle)]">Click a project for its finance control sheet</span></div><div className="overflow-x-auto"><table className="w-full min-w-[1180px] text-left"><thead><tr className="border-b border-[var(--border)] bg-[var(--surface-soft)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-subtle)]"><th className="px-6 py-4 font-semibold">Project</th><th className="px-4 py-4 font-semibold">Approved</th><th className="px-4 py-4 font-semibold">Released</th><th className="px-4 py-4 font-semibold">Spent</th><th className="px-4 py-4 font-semibold">Committed</th><th className="px-4 py-4 font-semibold">Available</th><th className="px-4 py-4 font-semibold">Advances</th><th className="px-4 py-4 font-semibold">Utilization</th><th className="px-4 py-4 font-semibold">Status</th><th className="px-6 py-4 text-right font-semibold">Action</th></tr></thead><tbody>{sortedProjects.map((project) => { const available = Math.max(0, project.approved - project.spent - project.committed); return <tr key={project.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-soft)]"><td className="px-6 py-4"><p className="text-xs font-semibold text-[var(--text)]">{project.name}</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{project.id} · {project.donor} · {project.location}</p></td><td className="px-4 py-4 text-xs font-medium text-[var(--text)]">{formatCurrency(project.approved)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.released)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.spent)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.committed)}</td><td className="px-4 py-4 text-xs font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(available)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.pendingAdvances)}</td><td className="px-4 py-4"><div className="flex items-center gap-2"><div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${project.utilization}%` }} /></div><span className="text-[10px] font-semibold text-[var(--text-muted)]">{project.utilization}%</span></div></td><td className="px-4 py-4"><span className={cn("rounded-full px-2.5 py-1 text-[9px] font-semibold", statusStyles[project.status])}>{project.status}</span></td><td className="px-6 py-4 text-right"><button type="button" onClick={() => setSelectedProject(project)} className="focus-ring rounded-lg px-3 py-2 text-[10px] font-semibold text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400">View ledger</button></td></tr>; })}</tbody></table></div></section>
+    <MonthlyFinanceRow key={area.id} area={area} />
+
+    <section className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] shadow-[var(--shadow-card)]"><div className="flex flex-col justify-between gap-3 border-b border-[var(--border)] p-5 sm:flex-row sm:items-end sm:p-6"><div><h3 className="text-base font-semibold text-[var(--text)]">Project-wise financial details</h3><p className="mt-1 text-xs text-[var(--text-subtle)]">Approved, released, spent, estimated corpus contributions and unsettled amounts for every {area.name} project</p></div><span className="text-[10px] text-[var(--text-subtle)]">Open a ledger for component-wise expenditure and its audit trail</span></div><div className="overflow-x-auto"><table className="w-full min-w-[1180px] text-left"><thead><tr className="border-b border-[var(--border)] bg-[var(--surface-soft)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-subtle)]"><th className="px-6 py-4 font-semibold">Project</th><th className="px-4 py-4 font-semibold">Approved</th><th className="px-4 py-4 font-semibold">Released</th><th className="px-4 py-4 font-semibold">Spent</th><th className="px-4 py-4 font-semibold">Corpus</th><th className="px-4 py-4 font-semibold">Available</th><th className="px-4 py-4 font-semibold">Advances</th><th className="px-4 py-4 font-semibold">Utilization</th><th className="px-4 py-4 font-semibold">Status</th><th className="px-6 py-4 text-right font-semibold">Action</th></tr></thead><tbody>{sortedProjects.map((project) => { const available = Math.max(0, project.approved - project.spent - project.committed); return <tr key={project.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-soft)]"><td className="px-6 py-4"><p className="text-xs font-semibold text-[var(--text)]">{project.name}</p><p className="mt-1 text-[9px] text-[var(--text-subtle)]">{project.id} · {project.donor} · {project.location}</p></td><td className="px-4 py-4 text-xs font-medium text-[var(--text)]">{formatCurrency(project.approved)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.released)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.spent)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.released * 0.5)}<span className="mt-1 block text-[9px] text-[var(--text-subtle)]">Estimated · 50% of released</span></td><td className="px-4 py-4 text-xs font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(available)}</td><td className="px-4 py-4 text-xs text-[var(--text-muted)]">{formatCurrency(project.pendingAdvances)}</td><td className="px-4 py-4"><div className="flex items-center gap-2"><div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--border)]"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${project.utilization}%` }} /></div><span className="text-[10px] font-semibold text-[var(--text-muted)]">{project.utilization}%</span></div></td><td className="px-4 py-4"><span className={cn("rounded-full px-2.5 py-1 text-[9px] font-semibold", statusStyles[project.status])}>{project.status}</span></td><td className="px-6 py-4 text-right"><button type="button" onClick={() => setSelectedProject(project)} className="focus-ring rounded-lg px-3 py-2 text-[10px] font-semibold text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400">View ledger</button></td></tr>; })}</tbody></table></div></section>
     <ProjectFinanceSheet project={selectedProject} onClose={() => setSelectedProject(null)} />
   </motion.div>;
 }
 
 function ProjectFinanceSheet({ project, onClose }: { project: FinanceProject | null; onClose: () => void }) {
-  const available = project ? Math.max(0, project.approved - project.spent - project.committed) : 0;
-  const checks = project ? [
-    { label: "Bank reconciliation", ok: true },
-    { label: "Voucher documentation", ok: project.status !== "Action required" },
-    { label: "Advance settlement", ok: project.pendingAdvances < project.approved * .02 },
-    { label: "Budget variance reviewed", ok: true },
-  ] : [];
-  return (
-    <Overlay
-      open={Boolean(project)}
-      onClose={onClose}
-      variant="panel"
-      size="md"
-      label="Project finance control sheet"
-      labelColor="var(--brand-primary)"
-      title={project?.name ?? ""}
-      description={project ? `${project.id} · ${project.donor} · ${project.location}` : ""}
-    >
-      {project && <>
-        <div className="p-5 sm:p-7">
-          <div className="grid grid-cols-2 gap-3">
-            {[{ label: "Approved", value: formatCurrency(project.approved, true) }, { label: "Released", value: formatCurrency(project.released, true) }, { label: "Verified spend", value: formatCurrency(project.spent, true) }, { label: "Committed", value: formatCurrency(project.committed, true) }, { label: "Available", value: formatCurrency(available, true) }, { label: "Pending advances", value: formatCurrency(project.pendingAdvances, true) }].map((item) => <div key={item.label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><p className="text-[9px] uppercase tracking-wide text-[var(--text-subtle)]">{item.label}</p><p className="mt-2 text-lg font-semibold text-[var(--text)]">{item.value}</p></div>)}
-          </div>
-          <div className="mt-6 rounded-2xl bg-slate-950 p-5 text-white">
-            <div className="flex items-end justify-between"><span><span className="block text-[9px] uppercase tracking-[0.16em] text-slate-500">Budget utilization</span><span className="mt-2 block text-3xl font-semibold text-emerald-300">{project.utilization}%</span></span><TrendingUp size={22} className="text-emerald-300" /></div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300" style={{ width: `${project.utilization}%` }} /></div>
-            <div className="mt-6"><h3 className="text-xs font-semibold">Control checks</h3><div className="mt-3 space-y-2">{checks.map((check) => <div key={check.label} className="flex items-center justify-between rounded-xl bg-white/[0.05] px-3 py-3 text-[10px]"><span className="text-slate-300">{check.label}</span><span className={cn("flex items-center gap-1.5 font-semibold", check.ok ? "text-emerald-300" : "text-amber-300")}>{check.ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}{check.ok ? "Complete" : "Follow-up"}</span></div>)}</div></div>
-          </div>
-          <div className="mt-6 rounded-2xl border border-[var(--border)] p-5">
-            <h3 className="text-xs font-semibold text-[var(--text)]">Latest accounting position</h3>
-            <div className="mt-4 space-y-3 text-[10px]">{[{ label: "Last voucher posted", value: project.lastVoucherDate }, { label: "Next finance review", value: "08 Aug 2026" }, { label: "Reporting currency", value: "INR" }, { label: "Cost-center status", value: project.status }].map((item) => <div key={item.label} className="flex justify-between gap-4 border-b border-[var(--border)] pb-3 last:border-0 last:pb-0"><span className="text-[var(--text-subtle)]">{item.label}</span><span className="font-medium text-[var(--text)]">{item.value}</span></div>)}</div>
-          </div>
-        </div>
-      </>}
-    </Overlay>
-  );
+  return <Overlay open={Boolean(project)} onClose={onClose} variant="panel" size="2xl" label="Project expenditure ledger" title={project?.name ?? ""} description={project ? `${project.id} · ${project.donor} · ${project.location}` : ""}>
+    {project && <ProjectExpenditureLedger key={project.id} project={project} />}
+  </Overlay>;
 }

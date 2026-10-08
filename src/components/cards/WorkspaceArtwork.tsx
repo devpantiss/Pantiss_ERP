@@ -37,7 +37,7 @@ function ThematicLayers() {
   );
 }
 
-function ClientNetwork() {
+function LeadershipNetwork() {
   return (
     <svg viewBox="0 0 260 150" className="absolute inset-0 size-full" aria-hidden>
       <path className="art-line art-line--dashed" d="m130 75-75-35m75 35 76-35m-76 35-72 38m72-38 72 38" />
@@ -68,7 +68,7 @@ export function WorkspaceArtwork({
       <div className="art-grid absolute inset-0" />
       {category === "core-operations" && <OperationsMap />}
       {category === "thematic-areas" && <ThematicLayers />}
-      {category === "clients" && <ClientNetwork />}
+      {category === "cxo" && <LeadershipNetwork />}
       <motion.div
         layoutId={`category-icon-${category}`}
         className={`workspace-art-icon absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[15px] bg-gradient-to-br ${accent} text-white`}

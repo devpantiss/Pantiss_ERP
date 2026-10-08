@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { financeAreas, formatCurrency, type FinanceProject } from "./data";
 import { cn } from "../../utils/cn";
+import { ProjectExpenditureLedger } from "./ProjectExpenditureLedger";
 import { Overlay } from "../../components/ui/Overlay";
 import { ProjectOnboarding } from "../projects/ProjectOnboarding";
 
@@ -315,8 +316,8 @@ export function ProjectsView() {
                     <p className="font-bold text-emerald-600">{formatCurrency(p.spent, true)}</p>
                   </div>
                   <div>
-                    <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Committed</span>
-                    <p className="font-bold text-[var(--text-muted)]">{formatCurrency(p.committed, true)}</p>
+                    <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Corpus · Estimated</span>
+                    <p className="font-bold text-[var(--text-muted)]">{formatCurrency(p.released * 0.5, true)}</p>
                   </div>
                 </div>
 
@@ -342,7 +343,7 @@ export function ProjectsView() {
                   onClick={() => setSelectedProject(p)}
                   className="focus-ring inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--module-bg)] px-3 py-1.5 text-[10px] font-semibold text-[var(--text)] hover:bg-[var(--surface-soft)]"
                 >
-                  View Details <ChevronRight size={12} />
+                  View ledger <ChevronRight size={12} />
                 </button>
               </div>
             </div>
@@ -356,9 +357,9 @@ export function ProjectsView() {
           open
           onClose={() => setSelectedProject(null)}
           variant="panel"
-          size="lg"
+          size="2xl"
           zIndex={75}
-          label="Project Financial Profile"
+          label="Project expenditure ledger"
           title={selectedProject.name}
           description={`${selectedProject.id} · Donor: ${selectedProject.donor} · Location: ${selectedProject.location}`}
           footer={
@@ -367,53 +368,11 @@ export function ProjectsView() {
               onClick={() => setSelectedProject(null)}
               className="focus-ring h-10 rounded-xl bg-[var(--brand-primary)] px-5 text-xs font-semibold text-white ml-auto"
             >
-              Close Dossier
+              Close ledger
             </button>
           }
         >
-          <div className="space-y-6 p-5 sm:p-6">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Approved</span>
-                <p className="mt-1 text-sm font-bold text-[var(--text)]">
-                  {formatCurrency(selectedProject.approved, true)}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Released</span>
-                <p className="mt-1 text-sm font-bold text-blue-600">
-                  {formatCurrency(selectedProject.released, true)}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Spent</span>
-                <p className="mt-1 text-sm font-bold text-emerald-600">
-                  {formatCurrency(selectedProject.spent, true)}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                <span className="text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">Utilization</span>
-                <p className="mt-1 text-sm font-bold text-[var(--text)]">
-                  {selectedProject.utilization}%
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[var(--border)] p-4 space-y-2">
-              <h4 className="text-xs font-bold text-[var(--text)]">Utilization Certificate (UC) Status</h4>
-              <p className="text-xs text-[var(--text-muted)]">
-                Form GFR-12A certified for Tranche 1 expenditure. Next quarterly submission due within 45 days of tranche exhaust.
-              </p>
-              <div className="mt-3 flex items-center justify-between text-xs border-t border-[var(--border)] pt-3">
-                <span className="text-[var(--text-subtle)]">Last Voucher Audit:</span>
-                <span className="font-semibold text-[var(--text)]">{selectedProject.lastVoucherDate}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[var(--text-subtle)]">Pending Field Advances:</span>
-                <span className="font-semibold text-[var(--text)]">{formatCurrency(selectedProject.pendingAdvances, true)}</span>
-              </div>
-            </div>
-          </div>
+          <ProjectExpenditureLedger key={selectedProject.id} project={selectedProject} />
         </Overlay>
       )}
     </div>

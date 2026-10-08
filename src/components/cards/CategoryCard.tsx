@@ -65,7 +65,7 @@ export const CategoryCard = memo(function CategoryCard({
             <div className="relative border-t border-[var(--border)] pt-6">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-[10px] text-[var(--text-subtle)]">
-                  {category.modules.length} modules
+                  {category.modules.length} {category.id === "cxo" ? "executive roles" : "modules"}
                 </span>
                 <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${category.accent}`} />
               </div>

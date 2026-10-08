@@ -14,57 +14,288 @@ import {
   CreditCard,
   ShieldCheck,
   X,
+  Building2,
 } from "lucide-react";
 import { financeAreas } from "./data";
 import { useEmployeeInvoices, type ReimbursementClaim } from "./employeeInvoiceStore";
 import { cn } from "../../utils/cn";
 import { Overlay } from "../../components/ui/Overlay";
-
 import { ClaimBills } from "./ClaimBills";
 import { saveReceipts } from "./receiptStore";
+import { CombinedApprovalsView } from "./FinanceOperationsViews";
 import "./auditTrail.css";
 
+type ReimbursementTab = "centre" | "staff";
+
 export function ReimbursementView() {
+  const [params, setParams] = useSearchParams();
+  const tab: ReimbursementTab = params.get("tab") === "staff" ? "staff" : "centre";
+
+  const setTab = (t: ReimbursementTab) => {
+    setParams({ tab: t });
+  };
+
+  return (
+    <div className="finance-audit space-y-6">
+      <header>
+        <h2 className="text-3xl font-semibold tracking-tight text-[var(--text)]">Reimbursements</h2>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          Manage centre reimbursements and staff expense claims across all projects and thematic areas.
+        </p>
+      </header>
+
+      {/* Tab switcher */}
+      <div role="tablist" aria-label="Reimbursement type" className="flex gap-2 rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-2">
+        {([
+          { value: "centre" as const, label: "Centre Reimbursement", icon: Building2 },
+          { value: "staff" as const, label: "Staff Reimbursement", icon: Receipt },
+        ]).map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            id={`reimbursement-tab-${value}`}
+            role="tab"
+            aria-selected={tab === value}
+            aria-controls="reimbursement-panel"
+            tabIndex={tab === value ? 0 : -1}
+            onKeyDown={(event) => {
+              if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                event.preventDefault();
+                const next =
+                  event.key === "Home" ? "centre"
+                  : event.key === "End" ? "staff"
+                  : tab === "centre" ? "staff" : "centre";
+                setTab(next);
+                document.getElementById(`reimbursement-tab-${next}`)?.focus();
+              }
+            }}
+            onClick={() => setTab(value)}
+            className={`focus-ring min-h-11 flex-1 flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium ${
+              tab === value
+                ? "bg-[var(--finance-accent-soft)] text-[var(--finance-accent)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
+            }`}
+          >
+            <Icon size={15} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div id="reimbursement-panel" role="tabpanel" aria-labelledby={`reimbursement-tab-${tab}`}>
+        {tab === "centre" ? <CentreReimbursementView /> : <StaffReimbursementView />}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CENTRE REIMBURSEMENT TAB
+   This is the internal invoices flow (previously in InvoicesView → CombinedApprovalsView)
+───────────────────────────────────────────────────────────────────────────── */
+function CentreReimbursementView() {
+  const [params, setParams] = useSearchParams();
+  const area = financeAreas.find((item) => item.id === params.get("area"));
+  const project = area?.projects.find((item) => item.id === params.get("project"));
+  const navigate = (areaId?: string, projectId?: string) =>
+    setParams({ tab: "centre", ...(areaId ? { area: areaId } : {}), ...(projectId ? { project: projectId } : {}) });
+
+  return (
+    <div className="space-y-5">
+      <nav aria-label="Centre reimbursement location" className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+        <button type="button" onClick={() => navigate()} className="focus-ring rounded-lg px-2 py-3">
+          Thematic areas
+        </button>
+        {area && (
+          <>
+            <ChevronRight size={14} />
+            <button type="button" onClick={() => navigate(area.id)} className="focus-ring rounded-lg px-2 py-3">
+              {area.name}
+            </button>
+          </>
+        )}
+        {project && (
+          <>
+            <ChevronRight size={14} />
+            <span aria-current="page" className="text-[var(--text)]">{project.name}</span>
+          </>
+        )}
+      </nav>
+      {!project ? (
+        <section>
+          <h3 className="mb-4 text-lg font-semibold text-[var(--text)]">
+            {area ? "Select a project" : "Select a thematic area"}
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {(area ? area.projects : financeAreas).map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => (area ? navigate(area.id, item.id) : navigate(item.id))}
+                className="focus-ring flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--module-bg)] p-6 text-left transition-colors hover:border-[var(--finance-accent-border)]"
+              >
+                <FolderKanban size={22} className="shrink-0 text-[var(--finance-accent)]" />
+                <span className="flex-1">
+                  <span className="block text-sm font-semibold text-[var(--text)]">{item.name}</span>
+                  <span className="mt-2 block text-xs text-[var(--text-muted)]">
+                    {"projects" in item ? `${item.projects.length} projects` : "View centre reimbursements"}
+                  </span>
+                </span>
+                <ChevronRight size={16} className="text-[var(--text-muted)]" />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <CombinedApprovalsView key={project.id} project={project} />
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STAFF REIMBURSEMENT TAB
+   Original ReimbursementView content
+───────────────────────────────────────────────────────────────────────────── */
+function StaffReimbursementView() {
   const invoices = useEmployeeInvoices();
   const [params, setParams] = useSearchParams();
   const knownProjects = new Set(financeAreas.flatMap((area) => area.projects.map((project) => project.name)));
   const otherProjects = [...new Set(invoices.claims.filter((claim) => !knownProjects.has(claim.project)).map((claim) => claim.project))];
-  const areas = [...financeAreas, ...(otherProjects.length ? [{ id: "unassigned", name: "Central / unassigned", projects: otherProjects.map((name) => ({ id: name, name })) }] : [])];
+  const areas = [
+    ...financeAreas,
+    ...(otherProjects.length
+      ? [{ id: "unassigned", name: "Central / unassigned", projects: otherProjects.map((name) => ({ id: name, name })) }]
+      : []),
+  ];
   const area = areas.find((item) => item.id === params.get("area"));
   const project = area?.projects.find((item) => item.name === params.get("project"));
   const items = area
     ? area.projects.map((item) => ({ id: item.id, name: item.name, names: [item.name] }))
     : areas.map((item) => ({ id: item.id, name: item.name, names: item.projects.map((entry) => entry.name) }));
 
-  return <div className="finance-audit space-y-6">
-    <nav aria-label="Reimbursement navigation" className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
-      <button type="button" aria-current={!area ? "page" : undefined} onClick={() => setParams({})} className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]">Thematic areas</button>
-      {area && <><ChevronRight size={14} aria-hidden="true" /><button type="button" aria-current={!project ? "page" : undefined} onClick={() => setParams({ area: area.id })} className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]">{area.name}</button></>}
-      {project && <><ChevronRight size={14} aria-hidden="true" /><span aria-current="page" className="font-medium text-[var(--text)]">{project.name}</span></>}
-    </nav>
-    {project ? <ProjectReimbursements key={project.id} invoices={invoices} projectName={project.name} onBack={() => setParams({ area: area!.id })} /> : <>
-      <section className="flex flex-col justify-between gap-5 rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:flex-row lg:items-center">
-        <div><p className="text-xs font-medium text-[var(--finance-accent)]">Expense reimbursements</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text)]">{area ? `${area.name} projects` : "Select a thematic area"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-muted)]">{area ? "Choose a project to review employee claims, verify receipts and track disbursements." : "Explore thematic areas, then select a project to manage its reimbursements."}</p></div>
-        {area && <button type="button" onClick={() => setParams({})} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text-muted)]"><ChevronLeft size={16} aria-hidden="true" />Back to thematic areas</button>}
-      </section>
-      {invoices.error && <p role="alert" className="text-sm text-[var(--text)]">{invoices.error}</p>}
-      <section aria-label={area ? "Projects" : "Thematic areas"} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((item) => {
-          const claims = invoices.claims.filter((claim) => item.names.includes(claim.project));
-          const pending = claims.filter((claim) => claim.status === "Pending Verification").length;
-          return <button key={item.id} type="button" onClick={() => setParams(area ? { area: area.id, project: item.name } : { area: item.id })} className="focus-ring flex flex-col rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 text-left shadow-[var(--shadow-card)] transition-colors hover:border-[var(--finance-accent-border)] hover:bg-[var(--surface-strong)]">
-            <div className="flex w-full items-center justify-between"><span className="grid size-11 place-items-center rounded-2xl bg-[var(--finance-accent-soft)] text-[var(--finance-accent)]">{area ? <Receipt size={21} aria-hidden="true" /> : <FolderKanban size={21} aria-hidden="true" />}</span><ArrowUpRight size={18} aria-hidden="true" className="text-[var(--text-muted)]" /></div>
-            <h3 className="mt-5 text-lg font-semibold text-[var(--text)]">{item.name}</h3><p className="mt-1 text-sm text-[var(--text-muted)]">{!area && `${item.names.length} projects · `}{claims.length} {claims.length === 1 ? "claim" : "claims"}</p>
-            <dl className="mt-6 grid w-full grid-cols-2 gap-4"><div><dt className="text-xs text-[var(--text-muted)]">Claim value</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">₹{claims.reduce((sum, claim) => sum + claim.amount, 0).toLocaleString("en-IN")}</dd></div><div><dt className="text-xs text-[var(--text-muted)]">Awaiting verification</dt><dd className="mt-1 text-lg font-semibold text-[var(--text)]">{pending}</dd></div></dl>
-            <span className="mt-5 text-xs font-medium text-[var(--finance-accent)]">{area ? "View reimbursements" : "View projects"}</span>
-          </button>;
-        })}
-      </section>
-    </>}
-  </div>;
+  const setStaffParams = (extra: Record<string, string>) => {
+    setParams({ tab: "staff", ...extra });
+  };
+
+  return (
+    <div className="space-y-6">
+      <nav aria-label="Staff reimbursement navigation" className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+        <button
+          type="button"
+          aria-current={!area ? "page" : undefined}
+          onClick={() => setStaffParams({})}
+          className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]"
+        >
+          Thematic areas
+        </button>
+        {area && (
+          <>
+            <ChevronRight size={14} aria-hidden="true" />
+            <button
+              type="button"
+              aria-current={!project ? "page" : undefined}
+              onClick={() => setStaffParams({ area: area.id })}
+              className="focus-ring min-h-11 rounded-lg px-2 hover:text-[var(--text)]"
+            >
+              {area.name}
+            </button>
+          </>
+        )}
+        {project && (
+          <>
+            <ChevronRight size={14} aria-hidden="true" />
+            <span aria-current="page" className="font-medium text-[var(--text)]">{project.name}</span>
+          </>
+        )}
+      </nav>
+
+      {project ? (
+        <ProjectReimbursements
+          key={project.id}
+          invoices={invoices}
+          projectName={project.name}
+          onBack={() => setStaffParams({ area: area!.id })}
+        />
+      ) : (
+        <>
+          <section className="flex flex-col justify-between gap-5 rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 shadow-[var(--shadow-card)] sm:p-8 lg:flex-row lg:items-center">
+            <div>
+              <p className="text-xs font-medium text-[var(--finance-accent)]">Staff expense reimbursements</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text)]">
+                {area ? `${area.name} projects` : "Select a thematic area"}
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-muted)]">
+                {area
+                  ? "Choose a project to review employee claims, verify receipts and track disbursements."
+                  : "Explore thematic areas, then select a project to manage its staff reimbursements."}
+              </p>
+            </div>
+            {area && (
+              <button
+                type="button"
+                onClick={() => setStaffParams({})}
+                className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text-muted)]"
+              >
+                <ChevronLeft size={16} aria-hidden="true" />
+                Back to thematic areas
+              </button>
+            )}
+          </section>
+          {invoices.error && <p role="alert" className="text-sm text-[var(--text)]">{invoices.error}</p>}
+          <section aria-label={area ? "Projects" : "Thematic areas"} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => {
+              const claims = invoices.claims.filter((claim) => item.names.includes(claim.project));
+              const pending = claims.filter((claim) => claim.status === "Pending Verification").length;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() =>
+                    setStaffParams(area ? { area: area.id, project: item.name } : { area: item.id })
+                  }
+                  className="focus-ring flex flex-col rounded-[24px] border border-[var(--border)] bg-[var(--module-bg)] p-6 text-left shadow-[var(--shadow-card)] transition-colors hover:border-[var(--finance-accent-border)] hover:bg-[var(--surface-strong)]"
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span className="grid size-11 place-items-center rounded-2xl bg-[var(--finance-accent-soft)] text-[var(--finance-accent)]">
+                      {area ? <Receipt size={21} aria-hidden="true" /> : <FolderKanban size={21} aria-hidden="true" />}
+                    </span>
+                    <ArrowUpRight size={18} aria-hidden="true" className="text-[var(--text-muted)]" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-[var(--text)]">{item.name}</h3>
+                  <p className="mt-1 text-sm text-[var(--text-muted)]">
+                    {!area && `${item.names.length} projects · `}
+                    {claims.length} {claims.length === 1 ? "claim" : "claims"}
+                  </p>
+                  <dl className="mt-6 grid w-full grid-cols-2 gap-4">
+                    <div>
+                      <dt className="text-xs text-[var(--text-muted)]">Claim value</dt>
+                      <dd className="mt-1 text-lg font-semibold text-[var(--text)]">
+                        ₹{claims.reduce((sum, claim) => sum + claim.amount, 0).toLocaleString("en-IN")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-[var(--text-muted)]">Awaiting verification</dt>
+                      <dd className="mt-1 text-lg font-semibold text-[var(--text)]">{pending}</dd>
+                    </div>
+                  </dl>
+                  <span className="mt-5 text-xs font-medium text-[var(--finance-accent)]">
+                    {area ? "View reimbursements" : "View projects"}
+                  </span>
+                </button>
+              );
+            })}
+          </section>
+        </>
+      )}
+    </div>
+  );
 }
 
-function ProjectReimbursements({ invoices, projectName, onBack }: {
+function ProjectReimbursements({
+  invoices,
+  projectName,
+  onBack,
+}: {
   invoices: ReturnType<typeof useEmployeeInvoices>;
   projectName: string;
   onBack: () => void;
@@ -77,7 +308,6 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
   const [showNewClaimModal, setShowNewClaimModal] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<ReimbursementClaim | null>(null);
 
-  // New claim form state
   const [claimantName, setClaimantName] = useState("");
   const [empId, setEmpId] = useState("");
   const [center, setCenter] = useState("");
@@ -114,7 +344,6 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
     if (saving) return;
     const amt = parseFloat(amount);
     if (!claimantName || isNaN(amt) || amt <= 0) return;
-
     setSaving(true);
     setAttachmentError("");
     try {
@@ -134,28 +363,25 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
         receiptName: receipts.map((receipt) => receipt.name).join(", "),
         status: "Pending Verification",
         managerApproved: true,
-        financeAudited: false
+        financeAudited: false,
       };
-
       if (!setClaims([newClaim, ...claims])) return;
       setShowNewClaimModal(false);
-      // reset form
       setClaimantName("");
       setEmpId("");
       setAmount("");
       setDescription("");
       setReceiptFiles([]);
-    } catch { setAttachmentError("Bills could not be saved. Please try again; your claim has not been submitted."); }
-    finally { setSaving(false); }
+    } catch {
+      setAttachmentError("Bills could not be saved. Please try again; your claim has not been submitted.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleApproveClaim = (claimId: string) => {
     const saved = setClaims((prev) =>
-      prev.map((c) =>
-        c.id === claimId
-          ? { ...c, status: "Finance Approved", financeAudited: true }
-          : c
-      )
+      prev.map((c) => (c.id === claimId ? { ...c, status: "Finance Approved", financeAudited: true } : c))
     );
     if (saved) setSelectedClaim(null);
   };
@@ -164,9 +390,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
     const utr = `HDFCR5${Date.now().toString().slice(-8)}`;
     const saved = setClaims((prev) =>
       prev.map((c) =>
-        c.id === claimId
-          ? { ...c, status: "Disbursed", payoutDate: new Date().toISOString(), bankUtr: utr }
-          : c
+        c.id === claimId ? { ...c, status: "Disbursed", payoutDate: new Date().toISOString(), bankUtr: utr } : c
       )
     );
     if (saved) setSelectedClaim(null);
@@ -174,8 +398,20 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
 
   return (
     <div className="space-y-6">
-      {invoiceError && <p role="alert" className="rounded-xl border border-[var(--border)] p-4 text-sm text-[var(--text)]">{invoiceError}</p>}
-      <button type="button" onClick={onBack} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs text-[var(--text-muted)]"><ChevronLeft size={16} aria-hidden="true" />Back to projects</button>
+      {invoiceError && (
+        <p role="alert" className="rounded-xl border border-[var(--border)] p-4 text-sm text-[var(--text)]">
+          {invoiceError}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onBack}
+        className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs text-[var(--text-muted)]"
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+        Back to projects
+      </button>
+
       {/* Hero Banner */}
       <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-teal-950 to-emerald-900 p-6 text-white shadow-xl sm:p-8">
         <div className="absolute -right-16 -top-24 size-72 rounded-full border border-white/10" />
@@ -183,11 +419,9 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
         <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]">
-              <Receipt size={13} /> Expense Reimbursement & Travel Advance
+              <Receipt size={13} /> Staff Expense Reimbursement & Travel Advance
             </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              {projectName}
-            </h2>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{projectName}</h2>
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
               Audited employee claims reimbursement pipeline with receipt verification, reporting manager pre-clearance, and automated bank disbursement.
             </p>
@@ -211,9 +445,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
             <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
               <Clock size={18} />
             </span>
-            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-600">
-              In Review
-            </span>
+            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold text-amber-600">In Review</span>
           </div>
           <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">{stats.pending} Claims</p>
           <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">Pending Finance Verification</p>
@@ -225,9 +457,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
             <span className="grid size-10 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
               <CheckCircle2 size={18} />
             </span>
-            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-semibold text-blue-600">
-              Approved
-            </span>
+            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-semibold text-blue-600">Approved</span>
           </div>
           <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">
             ₹{stats.approvedTotal.toLocaleString("en-IN")}
@@ -241,9 +471,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
             <span className="grid size-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
               <CreditCard size={18} />
             </span>
-            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">
-              Settled
-            </span>
+            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">Settled</span>
           </div>
           <p className="mt-4 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
             ₹{stats.disbursedTotal.toLocaleString("en-IN")}
@@ -257,9 +485,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
             <span className="grid size-10 place-items-center rounded-xl bg-purple-500/10 text-purple-600">
               <ShieldCheck size={18} />
             </span>
-            <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[9px] font-semibold text-purple-600">
-              SLA Met
-            </span>
+            <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[9px] font-semibold text-purple-600">SLA Met</span>
           </div>
           <p className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">2.8 Days</p>
           <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">Avg Settlement Turnaround</p>
@@ -275,7 +501,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
               <Receipt size={17} />
             </span>
             <div>
-              <h3 className="text-sm font-semibold text-[var(--text)]">Reimbursement Claims Queue</h3>
+              <h3 className="text-sm font-semibold text-[var(--text)]">Staff Reimbursement Claims Queue</h3>
               <p className="text-[10px] text-[var(--text-subtle)]">
                 Showing {filteredClaims.length} of {projectClaims.length} claims
               </p>
@@ -323,8 +549,7 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
           </div>
         </div>
 
-        {/* Claims Table */}
-        <div className="focus-ring mt-5 overflow-x-auto" role="region" aria-label="Project reimbursement claims" tabIndex={0}>
+        <div className="focus-ring mt-5 overflow-x-auto" role="region" aria-label="Staff reimbursement claims" tabIndex={0}>
           <table className="w-full min-w-[850px] text-left text-xs">
             <thead>
               <tr className="border-b border-[var(--border)] text-[9px] uppercase tracking-wider text-[var(--text-subtle)]">
@@ -398,12 +623,28 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                   </td>
                 </tr>
               ))}
-              {filteredClaims.length === 0 && <tr><td colSpan={8} className="px-4 py-14 text-center">
-                <Receipt size={24} aria-hidden="true" className="mx-auto text-[var(--text-muted)]" />
-                <p className="mt-3 text-sm font-medium text-[var(--text)]">{projectClaims.length ? "No claims match your filters" : "No reimbursements submitted yet"}</p>
-                <p className="mt-2 text-xs text-[var(--text-muted)]">{projectClaims.length ? "Try another search or clear your filters." : "Submit the first expense claim for this project."}</p>
-                {projectClaims.length > 0 && <button type="button" onClick={() => { setSearchQuery(""); setStatusFilter("all"); setCategoryFilter("all"); }} className="focus-ring mt-4 min-h-11 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text)]">Clear filters</button>}
-              </td></tr>}
+              {filteredClaims.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-14 text-center">
+                    <Receipt size={24} aria-hidden="true" className="mx-auto text-[var(--text-muted)]" />
+                    <p className="mt-3 text-sm font-medium text-[var(--text)]">
+                      {projectClaims.length ? "No claims match your filters" : "No reimbursements submitted yet"}
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--text-muted)]">
+                      {projectClaims.length ? "Try another search or clear your filters." : "Submit the first expense claim for this project."}
+                    </p>
+                    {projectClaims.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(""); setStatusFilter("all"); setCategoryFilter("all"); }}
+                        className="focus-ring mt-4 min-h-11 rounded-xl border border-[var(--border)] px-4 text-xs text-[var(--text)]"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -458,7 +699,6 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                   className="focus-ring mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text)] outline-none"
                 />
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">Employee ID</label>
                 <input
@@ -475,7 +715,6 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">Associated Project</label>
                 <input aria-label="Associated project" value={projectName} readOnly className="mt-1.5 h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--text-muted)]" />
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">Cost Center</label>
                 <input
@@ -502,7 +741,6 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                   <option value="Emergency Float">Emergency Float</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-[var(--text-muted)]">
                   Claim Amount (₹) <b className="text-red-500">*</b>
@@ -559,7 +797,22 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                   }}
                 />
               </label>
-              <ul className="mt-3 space-y-2">{receiptFiles.map((file, index) => <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] p-3"><span className="min-w-0 break-all text-xs text-[var(--text)]">{index + 1}. {file.name}</span><button type="button" disabled={saving} aria-label={`Remove ${file.name}`} onClick={() => setReceiptFiles((files) => files.filter((_, i) => i !== index))} className="focus-ring rounded-lg p-2 text-[var(--text-muted)]"><X size={16} /></button></li>)}</ul>
+              <ul className="mt-3 space-y-2">
+                {receiptFiles.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] p-3">
+                    <span className="min-w-0 break-all text-xs text-[var(--text)]">{index + 1}. {file.name}</span>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      aria-label={`Remove ${file.name}`}
+                      onClick={() => setReceiptFiles((files) => files.filter((_, i) => i !== index))}
+                      className="focus-ring rounded-lg p-2 text-[var(--text-muted)]"
+                    >
+                      <X size={16} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
               {attachmentError && <p role="alert" className="mt-3 text-xs text-[var(--text)]">{attachmentError}</p>}
               {invoiceError && <p role="alert" className="mt-3 text-xs text-[var(--text)]">{invoiceError}</p>}
             </div>
@@ -626,14 +879,11 @@ function ProjectReimbursements({ invoices, projectName, onBack }: {
                 <p className="mt-1 text-sm font-bold text-emerald-600">{selectedClaim.status}</p>
               </div>
             </div>
-
             <div className="rounded-xl border border-[var(--border)] p-4 space-y-2">
               <h4 className="text-xs font-bold text-[var(--text)]">Claim Particulars</h4>
               <p className="text-xs leading-relaxed text-[var(--text-muted)]">{selectedClaim.description}</p>
             </div>
-
             <ClaimBills key={selectedClaim.id} claim={selectedClaim} />
-
             {selectedClaim.bankUtr && (
               <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                 <h5 className="text-xs font-bold text-[var(--text)]">Settlement Details</h5>

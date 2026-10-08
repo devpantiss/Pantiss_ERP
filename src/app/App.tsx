@@ -9,6 +9,8 @@ const LandingPage = lazy(() => import("../pages/LandingPage"));
 const ModulesPage = lazy(() => import("../pages/ModulesPage"));
 const MonitoringEvaluationPage = lazy(() => import("../pages/MonitoringEvaluationPage"));
 const FinancePage = lazy(() => import("../pages/FinancePage"));
+const METhematicPage = lazy(() => import("../pages/METhematicPage"));
+const CXOPage = lazy(() => import("../pages/CXOPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function RouteFallback() {
@@ -23,7 +25,7 @@ export function App() {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
   const [loading, setLoading] = useState(true);
-  const isEnterpriseWorkspace = location.pathname.startsWith("/monitoring-evaluation") || location.pathname.startsWith("/finance");
+  const isEnterpriseWorkspace = location.pathname.startsWith("/monitoring-evaluation/") || location.pathname.startsWith("/finance") || /^\/cxo\/[^/]+\/dashboard/.test(location.pathname);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -52,9 +54,11 @@ export function App() {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/modules/:categoryId" element={<ModulesPage />} />
+                  <Route path="/monitoring-evaluation" element={<METhematicPage />} />
                   <Route path="/monitoring-evaluation/:section?" element={<MonitoringEvaluationPage />} />
                   <Route path="/monitoring-evaluation/projects/:projectId" element={<MonitoringEvaluationPage />} />
                   <Route path="/monitoring-evaluation/projects/:projectId/centers/:centerId" element={<MonitoringEvaluationPage />} />
+                  <Route path="/cxo/:role/:view" element={<CXOPage />} />
                   <Route path="/finance/:areaId?" element={<FinancePage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

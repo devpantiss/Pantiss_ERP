@@ -9,10 +9,12 @@ export const ModuleCard = memo(function ModuleCard({
   module,
   index,
   onSelect,
+  opensDialog = true,
 }: {
   module: ModuleItem;
   index: number;
   onSelect?: (module: ModuleItem) => void;
+  opensDialog?: boolean;
 }) {
   const Icon = module.icon;
   const reduceMotion = useReducedMotion();
@@ -29,7 +31,7 @@ export const ModuleCard = memo(function ModuleCard({
         type="button"
         className="focus-ring relative size-full overflow-hidden rounded-[23px] bg-[var(--module-bg)] text-left"
         aria-label={`Open ${module.title} module`}
-        aria-haspopup={onSelect ? "dialog" : undefined}
+        aria-haspopup={onSelect && opensDialog ? "dialog" : undefined}
         onClick={() => onSelect?.(module)}
       >
         <Ripple>

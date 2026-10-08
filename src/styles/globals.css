@@ -382,7 +382,7 @@ button {
   color: #22d3ee;
 }
 
-.workspace-art--clients {
+.workspace-art--cxo {
   color: #a78bfa;
 }
 
@@ -484,7 +484,7 @@ button {
     linear-gradient(145deg, rgba(15, 22, 25, 0.98), rgba(10, 16, 20, 0.98));
 }
 
-.dark .workspace-panel--clients {
+.dark .workspace-panel--cxo {
   background:
     radial-gradient(circle at 50% 42%, rgba(124, 58, 237, 0.09), transparent 36%),
     linear-gradient(145deg, rgba(20, 17, 28, 0.98), rgba(14, 12, 21, 0.98));
