@@ -1,0 +1,61 @@
+{
+  "contract": "capability.md",
+  "targetViewports": [
+    "1440x900",
+    "390x844"
+  ],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Semantic navigation, named form controls, focus outline, modal Escape handler and focus trap inspected; keyboard form entry and native selects exercised."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Rendered desktop and mobile; mobile document width verified 390px after fixing overflow; table and funnel remain locally scrollable."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "not-applicable",
+      "reason": "Local synchronous record initialization; existing route loader reused."
+    },
+    "empty": {
+      "status": "pass",
+      "evidence": "Searched unmatched text and verified No opportunities found, then reset filters."
+    },
+    "error": {
+      "status": "pass",
+      "evidence": "Injected a failing Storage.setItem in isolated test browser, submitted sample opportunity, observed alert: Browser storage is unavailable. Changes are kept for this session only. Restored original storage method."
+    },
+    "partial": {
+      "status": "pass",
+      "evidence": "Sample workspace label and local browser storage scope visible."
+    },
+    "success": {
+      "status": "pass",
+      "evidence": "Created sample partnership, changed stage, completed checklist; updated total persisted after reload."
+    },
+    "permission": {
+      "status": "not-applicable",
+      "reason": "Explicit demo surface; no remote backend or new authenticated access boundary."
+    }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x900",
+      "artifact": "desktop-light.png",
+      "observation": "Desktop shell and dashboard inspected in light and dark themes."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "mobile.png",
+      "observation": "Two-column metrics, stacked controls and mobile navigation; no page overflow."
+    }
+  ],
+  "verification": [
+    "Production build passed",
+    "Scoped ESLint passed",
+    "Create, stage update, checklist, reload persistence passed",
+    "Pipeline, proposals, partners, reports navigated",
+    "CSV download received",
+    "Mobile document scrollWidth equals 390px"
+  ]
+}

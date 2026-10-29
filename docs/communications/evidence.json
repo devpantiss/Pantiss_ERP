@@ -1,0 +1,53 @@
+{
+  "contract": "capability.md",
+  "targetViewports": [
+    "1440x900",
+    "390x844"
+  ],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Tab moved focus from modal close to named title field with solid focus outline. Escape closed modal. Semantic labels and native selects inspected. Reduced motion reuses existing shell and workspace CSS."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Inspected light and dark desktop, 390x844 mobile. All seven views have no document overflow; mobile navigation opens and closes."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "pass",
+      "evidence": "Observed existing welcome and route loading before workspace content stabilized."
+    },
+    "empty": {
+      "status": "pass",
+      "evidence": "Unmatched search showed No content matches your filters; reset restored content."
+    },
+    "error": {
+      "status": "pass",
+      "evidence": "Approval without checks rejected; injected Storage.setItem failure showed session-only warning and retained content; restored storage and saved."
+    },
+    "partial": {
+      "status": "pass",
+      "evidence": "Visible sample, manual reporting and browser storage labels; reach explicitly non-deduplicated."
+    },
+    "success": {
+      "status": "pass",
+      "evidence": "Created sample brief, completed checks, approved and recorded publication; persisted through viewport-triggered reload. Stakeholder completion and reopen shown. CSV contains expected headers and filtered records."
+    },
+    "permission": {
+      "status": "pass",
+      "evidence": "Signed in through Communications demo dialog, saw Ananya Das manager profile. Sign out returned to modules and removed session. Route source requires communications-manager module identity."
+    }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x900",
+      "artifact": "desktop.jpg",
+      "observation": "Light overview with four metrics, editorial workflow, review callout and shared navigation."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "mobile.jpg",
+      "observation": "Mobile stacked toolbar, readable two-column metrics, no horizontal overflow."
+    }
+  ]
+}

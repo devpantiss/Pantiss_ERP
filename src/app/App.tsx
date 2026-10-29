@@ -9,6 +9,8 @@ const LandingPage = lazy(() => import("../pages/LandingPage"));
 const ModulesPage = lazy(() => import("../pages/ModulesPage"));
 const MonitoringEvaluationPage = lazy(() => import("../pages/MonitoringEvaluationPage"));
 const HRPage = lazy(() => import("../pages/HRPage"));
+const CommunicationsPage = lazy(() => import("../pages/CommunicationsPage"));
+const BusinessDevelopmentPage = lazy(() => import("../pages/BusinessDevelopmentPage"));
 const FinancePage = lazy(() => import("../pages/FinancePage"));
 const METhematicPage = lazy(() => import("../pages/METhematicPage"));
 const CXOPage = lazy(() => import("../pages/CXOPage"));
@@ -26,7 +28,7 @@ export function App() {
   const location = useLocation();
   const reduceMotion = useReducedMotion();
   const [loading, setLoading] = useState(true);
-  const isEnterpriseWorkspace = location.pathname.startsWith("/monitoring-evaluation/") || location.pathname.startsWith("/finance") || location.pathname.startsWith("/hr") || /^\/cxo\/[^/]+\/dashboard/.test(location.pathname);
+  const isEnterpriseWorkspace = location.pathname.startsWith("/monitoring-evaluation/") || location.pathname.startsWith("/communications") || location.pathname.startsWith("/business-development") || location.pathname.startsWith("/finance") || location.pathname.startsWith("/hr") || /^\/cxo\/[^/]+\/dashboard/.test(location.pathname);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -38,7 +40,7 @@ export function App() {
 
   return (
     <>
-      <AmbientBackground />
+      {!isEnterpriseWorkspace && <AmbientBackground />}
       <AnimatePresence>{loading && <PageLoader onComplete={completeLoading} />}</AnimatePresence>
       {!loading && (
         <>
@@ -61,6 +63,8 @@ export function App() {
                   <Route path="/monitoring-evaluation/projects/:projectId/centers/:centerId" element={<MonitoringEvaluationPage />} />
                   <Route path="/cxo/:role/:view" element={<CXOPage />} />
                   <Route path="/hr/:section?" element={<HRPage />} />
+                  <Route path="/communications/:section?" element={<CommunicationsPage />} />
+                  <Route path="/business-development/:section?" element={<BusinessDevelopmentPage />} />
                   <Route path="/finance/:areaId?" element={<FinancePage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

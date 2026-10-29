@@ -1,0 +1,16 @@
+export const stages = ['Identified', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'] as const;
+export type Stage = typeof stages[number];
+export const themes = ['Skill development', 'Livelihood', 'Entrepreneurship', 'Health', 'Climate change'];
+export interface Opportunity { id: string; title: string; partner: string; theme: string; value: number; stage: Stage; owner: string; deadline: string; next: string; checklist: boolean[]; history: string[] }
+export const probability: Record<Stage, number> = { Identified: .1, Qualified: .3, Proposal: .5, Negotiation: .8, Won: 1, Lost: 0 };
+export const money = (value: number) => `₹${(value / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L`;
+export const seed: Opportunity[] = [
+ { id:'BD-1024', title:'Future-ready skills for rural youth', partner:'Tata STRIVE', theme:themes[0], value:8500000, stage:'Negotiation', owner:'Ananya Das', deadline:'2026-11-04', next:'Confirm revised budget with CSR team', checklist:[true,true,true,false], history:['28 Oct · Revised financial proposal shared','24 Oct · Technical review completed'] },
+ { id:'BD-1025', title:'Women-led enterprise accelerator', partner:'HDFC Bank Parivartan', theme:themes[2], value:6200000, stage:'Proposal', owner:'Rahul Mishra', deadline:'2026-10-31', next:'Complete impact framework and submit draft', checklist:[true,true,false,false], history:['27 Oct · Concept note approved'] },
+ { id:'BD-1026', title:'Green livelihoods in mining communities', partner:'JSW Foundation', theme:themes[1], value:4800000, stage:'Qualified', owner:'Priya Sahoo', deadline:'2026-11-12', next:'Schedule needs-assessment workshop', checklist:[true,false,false,false], history:['26 Oct · Discovery meeting completed'] },
+ { id:'BD-1027', title:'Community health access initiative', partner:'SBI Foundation', theme:themes[3], value:3500000, stage:'Identified', owner:'Ananya Das', deadline:'2026-11-18', next:'Validate eligibility and geographic scope', checklist:[false,false,false,false], history:['25 Oct · Funding call identified'] },
+ { id:'BD-1028', title:'Odisha youth employability programme', partner:'NSDC', theme:themes[0], value:12000000, stage:'Won', owner:'Rahul Mishra', deadline:'2026-10-20', next:'Coordinate programme handover with operations', checklist:[true,true,true,true], history:['20 Oct · Agreement signed'] },
+ { id:'BD-1029', title:'Climate-resilient village clusters', partner:'SELCO Foundation', theme:themes[4], value:4200000, stage:'Proposal', owner:'Priya Sahoo', deadline:'2026-11-06', next:'Finalize implementation milestones', checklist:[true,true,true,false], history:['28 Oct · Budget review completed'] },
+ { id:'BD-1030', title:'Rural enterprise market access', partner:'Reliance Foundation', theme:themes[2], value:5500000, stage:'Won', owner:'Ananya Das', deadline:'2026-09-28', next:'Introduce programme delivery team', checklist:[true,true,true,true], history:['28 Sep · Agreement signed'] },
+ { id:'BD-1031', title:'Digital learning outreach', partner:'Tata STRIVE', theme:themes[0], value:2100000, stage:'Lost', owner:'Rahul Mishra', deadline:'2026-09-15', next:'Capture feedback for the next funding cycle', checklist:[true,true,true,true], history:['15 Sep · Not selected in this funding cycle'] },
+];

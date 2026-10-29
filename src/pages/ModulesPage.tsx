@@ -20,6 +20,14 @@ export default function ModulesPage() {
   const [selectedModule, setSelectedModule] = useState<ModuleItem | null>(null);
   const closeLogin = useCallback(() => setSelectedModule(null), []);
   const openModule = useCallback((module: ModuleItem) => {
+    if (module.id === "communications" && user?.moduleId === module.id && user.role === "communications-manager") {
+      navigate("/communications/overview");
+      return;
+    }
+    if (module.id === "business-development" && user?.moduleId === module.id && user.role === "business-development-manager") {
+      navigate("/business-development/overview");
+      return;
+    }
     if (module.id === "human-resources" && user?.moduleId === module.id) {
       navigate("/hr/dashboard");
       return;
@@ -35,6 +43,8 @@ export default function ModulesPage() {
     setSelectedModule(module);
   }, [navigate, user]);
   const handleAuthenticated = useCallback((authenticatedUser: AuthUser) => {
+    if (selectedModule?.id === "communications") navigate("/communications/overview");
+    if (selectedModule?.id === "business-development") navigate("/business-development/overview");
     if (selectedModule?.id === "human-resources") navigate("/hr/dashboard");
     if (selectedModule?.id === "finance") {
       navigate("/finance/dashboard");
